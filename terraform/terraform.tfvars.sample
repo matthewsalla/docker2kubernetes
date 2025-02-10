@@ -1,0 +1,65 @@
+# terraform.tfvars (DO NOT COMMIT THIS FILE)
+libvirt_user = "ubuntu"
+
+host_ip = "192.168.1.222"
+control_plane_ip = "192.168.1.80"
+worker_node_ips = {
+  "node1" = "192.168.1.81"
+  "node2" = "192.168.1.82"
+  "node3" = "192.168.1.83"
+}
+gateway_ip = "192.168.1.88"
+
+k3s_cluster_main_pool = "/mnt/main_device/main_pool"
+k3s_cluster_main_pool_name = "k3s_main_pool"
+
+# The key names are used by the worker nodes 'longhorn_disk_path'.  They must match.
+longhorn_storage_pools = {
+  "worker_longhorn_node1" = "/mnt/BAY11_10TB/k3s_storage_node1"
+  "worker_longhorn_node2" = "/mnt/BAY01_10TB/k3s_storage_node2"
+  "worker_longhorn_node3" = "/mnt/BAY03_14TB/k3s_storage_node3"
+}
+
+ssh_key = "~/.ssh/id_rsa.pub"
+
+k3s_nodes = {
+    "control-plane" = {
+      vcpu   = 2
+      ram    = 8192
+      disk   = 64
+      cloud_init = "control-plane"
+      longhorn_disk_path = ""  # no extra disk
+      ip_address = "192.168.1.80"
+      hostname   = "kube-control-plane"
+    }
+
+    "kube-worker-node1" = {
+      vcpu   = 4
+      ram    = 16384
+      disk   = 64
+      cloud_init = "worker-node"
+      longhorn_disk_path = "worker_longhorn_node1"
+      ip_address = "192.168.1.81"
+      hostname   = "kube-worker-node1"
+    }
+
+    "kube-worker-node2" = {
+      vcpu   = 4
+      ram    = 16384
+      disk   = 64
+      cloud_init = "worker-node"
+      longhorn_disk_path = "worker_longhorn_node2"
+      ip_address = "192.168.1.82"
+      hostname   = "kube-worker-node2"
+    }
+
+    "kube-worker-node3" = {
+      vcpu   = 4
+      ram    = 16384
+      disk   = 64
+      cloud_init = "worker-node"
+      longhorn_disk_path = "worker_longhorn_node3"
+      ip_address = "192.168.1.83"
+      hostname   = "kube-worker-node3"
+    }
+  }
