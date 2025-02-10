@@ -10,7 +10,7 @@ worker_node_ips = {
 }
 gateway_ip = "192.168.1.88"
 
-k3s_cluster_main_pool = "/mnt/main_device/main_pool"
+k3s_cluster_main_pool = "/mnt/BAY01_10TB/main_pool"
 k3s_cluster_main_pool_name = "k3s_main_pool"
 
 # The key names are used by the worker nodes 'longhorn_disk_path'.  They must match.
