@@ -18,11 +18,9 @@ This repository contains infrastructure-as-code (IaC) for deploying and managing
 
 Ensure you have the following installed:
 
-Terraform (>= 1.3.0)
-
-Libvirt / KVM
-
-Lens
+- Terraform (>= 1.3.0)
+- Libvirt / KVM
+- Lens
 
 2️⃣ Clone the Repository
 
