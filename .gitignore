@@ -37,3 +37,22 @@ override.tf.json
 terraform.rc
 
 .terraform.lock.hcl
+
+# Ignore Helm cache and local files
+kubernetes/helm/*/charts/
+kubernetes/helm/*/tmp/
+kubernetes/helm/*/release.*
+
+# Ignore everything in the secrets directory
+kubernetes/secrets/*
+
+# Allow only encrypted Sealed Secrets
+!kubernetes/secrets/*-sealed-secret.yaml
+
+# Ignore temporary and log files
+*.log
+*.bak
+*.swp
+*.swo
+*.tmp
+.DS_Store
