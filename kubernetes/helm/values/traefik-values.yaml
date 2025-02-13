@@ -1,0 +1,31 @@
+---
+additionalArguments:
+  - "--entrypoints.websecure.http.middlewares=traefik-hsts@kubernetescrd"  # Apply to HTTPS entrypoint
+
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+
+  websecure:
+    address: ":443"
+
+env:
+  - name: CF_API_EMAIL
+    valueFrom:
+      secretKeyRef:
+        key: email
+        name: cloudflare-api-credentials
+  - name: CF_API_KEY
+    valueFrom:
+      secretKeyRef:
+        key: apiKey
+        name: cloudflare-api-credentials
+
+ingressRoute:
+  dashboard:
+    enabled: false

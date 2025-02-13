@@ -1,0 +1,32 @@
+installCRDs: true
+
+extraArgs:
+  - --dns01-recursive-nameservers=1.1.1.1:53,8.8.8.8:53
+  - --dns01-recursive-nameservers-only
+
+# Enables all required cert-manager components
+cainjector:
+  enabled: true
+
+startupapicheck:
+  enabled: true
+
+global:
+  leaderElection:
+    namespace: cert-manager
+
+securityContext:
+  fsGroup: 1001
+  runAsUser: 1001
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
