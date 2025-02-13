@@ -1,0 +1,17 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: test-cert
+  namespace: default
+spec:
+  secretName: test-cert-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: test.atlasmalt.com
+  dnsNames:
+    - test.atlasmalt.com
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
