@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Delete current sealed secret
+echo "❌ Delete sealed secret"
+kubectl delete secret -n kube-system $(kubectl get secret -n kube-system | grep sealed-secrets-key | awk '{print $1}')
+echo "✅ Completed!"
+
 # Configure Bitwarden CLI to use self-hosted server
 bw config server https://bitwarden.galacticrailways.com
 
@@ -29,3 +34,8 @@ echo "✅ Sealed Secrets private key restored successfully!"
 # Logout from Bitwarden
 bw logout
 unset BW_SESSION
+
+# Restart sealed-secrets to load the new key
+echo "🔄 Restarting Sealed Secrets deployment"
+kubectl rollout restart deployment sealed-secrets -n kube-system
+echo "✅ Sealed Secrets restarted!"

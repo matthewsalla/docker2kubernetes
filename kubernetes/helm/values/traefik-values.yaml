@@ -29,3 +29,15 @@ env:
 ingressRoute:
   dashboard:
     enabled: false
+
+metrics:
+  prometheus:
+    entryPoint: metrics
+    addEntryPointsLabels: true
+    addServicesLabels: true
+
+providers:
+  kubernetesCRD: {}
+  kubernetesIngress:
+    publishedService:
+      enabled: true
