@@ -30,6 +30,8 @@ ingressRoute:
   dashboard:
     enabled: false
 
+certIssuer: letsencrypt-prod  # Default to production, overridden in script
+
 metrics:
   prometheus:
     entryPoint: metrics

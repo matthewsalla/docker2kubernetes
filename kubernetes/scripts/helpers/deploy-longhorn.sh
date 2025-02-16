@@ -5,6 +5,9 @@ set -e  # Exit on error
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/config.sh"
 
+# Define paths to manifests
+LONGHORN_APP_PATH="$APPS_PATH/longhorn"
+
 echo "Deploying Longhorn..."
 kubectl create namespace longhorn-system || true
 
@@ -25,8 +28,8 @@ helm upgrade --install longhorn longhorn/longhorn \
 
 # Apply the Longhorn TLS Certificate
 echo "🔐 Deploying longhorn Certificate..."
-kubectl apply -f "$CERTS_PATH/longhorn-certificate.yaml"
-kubectl apply -f "$APPS_PATH/longhorn/longhorn-ingressroute.yaml"
+cat "$CERTS_PATH/longhorn-certificate.yaml" | envsubst | kubectl apply -f -
+kubectl apply -f "$LONGHORN_APP_PATH/longhorn-ingressroute.yaml"
 echo "✅ Longhorn deployment completed successfully!"
 
 echo "🎉 Longhorn deployed!"

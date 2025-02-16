@@ -32,7 +32,7 @@ export BW_SESSION=$(bw unlock --passwordenv BW_PASSWORD --raw)
 echo "✅ Unlock Vault Completed!"
 
 echo "🔍 Retrieving Sealed Secrets private key..."
-SEALED_SECRET_KEY=$(bw get item "Atlas Malt K3s Sealed Secrets Key" --session "$BW_SESSION" | jq -r '.notes')
+SEALED_SECRET_KEY=$(bw get item "K3s Sealed Secrets Private Key" --session "$BW_SESSION" | jq -r '.notes')
 
 if [ -z "$SEALED_SECRET_KEY" ]; then
     echo "❌ Could not retrieve the Sealed Secrets private key from Bitwarden."

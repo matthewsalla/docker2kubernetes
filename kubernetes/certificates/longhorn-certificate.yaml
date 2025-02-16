@@ -6,7 +6,7 @@ metadata:
 spec:
   secretName: longhorn-tls  # ✅ Cert-Manager will create this Secret automatically
   issuerRef:
-    name: letsencrypt-prod  # ✅ Matches your ClusterIssuer
+    name: ${CERT_ISSUER}  # This will be replaced by the script
     kind: ClusterIssuer
   dnsNames:
     - longhorn.atlasmalt.com  # ✅ This must match the domain in your IngressRoute
