@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: longhorn-tls
+  namespace: longhorn-system
+spec:
+  secretName: longhorn-tls  # ✅ Cert-Manager will create this Secret automatically
+  issuerRef:
+    name: letsencrypt-prod  # ✅ Matches your ClusterIssuer
+    kind: ClusterIssuer
+  dnsNames:
+    - longhorn.atlasmalt.com  # ✅ This must match the domain in your IngressRoute

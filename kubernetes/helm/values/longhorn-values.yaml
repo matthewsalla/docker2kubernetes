@@ -2,7 +2,6 @@ persistence:
   defaultClass: true
   defaultFsType: ext4
   reclaimPolicy: Retain
+
 ingress:
-  enabled: true
-  host: longhorn.atlasmalt.com
-  tls: true
+  enabled: false
