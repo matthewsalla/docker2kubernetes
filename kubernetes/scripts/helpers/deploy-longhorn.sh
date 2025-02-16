@@ -30,6 +30,10 @@ helm upgrade --install longhorn longhorn/longhorn \
 echo "🔐 Deploying longhorn Certificate..."
 cat "$CERTS_PATH/longhorn-certificate.yaml" | envsubst | kubectl apply -f -
 kubectl apply -f "$LONGHORN_APP_PATH/longhorn-ingressroute.yaml"
+
+# Update local-path to not be default storage class
+kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'
+
 echo "✅ Longhorn deployment completed successfully!"
 
 echo "🎉 Longhorn deployed!"
