@@ -1,0 +1,7 @@
+persistence:
+  defaultClass: true
+  defaultFsType: ext4
+  reclaimPolicy: Retain
+
+ingress:
+  enabled: false

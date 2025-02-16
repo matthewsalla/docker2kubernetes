@@ -1,6 +1,20 @@
 #!/bin/bash
 set -e  # Exit immediately if a command exits with a non-zero status
 
+DEPLOYMENT_MODE=${1:-prod}
+# Check for "staging" argument
+if [[ "$1" == "staging" ]]; then
+    CERT_ISSUER="letsencrypt-staging"
+    echo "⚠️  Using Let's Encrypt Staging Mode!"
+else
+    CERT_ISSUER="letsencrypt-prod"
+    echo "🚀  Using Let's Encrypt Production Mode!"
+fi
+
+# Pass DEPLOYMENT_MODE and CERT_ISSUER to other scripts
+export DEPLOYMENT_MODE
+export CERT_ISSUER
+
 echo "🔄 Nuke and Deploy K3s Cluster"
 
 echo "⚠️ WARNING: This will destroy and redeploy your entire cluster!"

@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e  # Exit on error
 
+# Determine the script's directory and source config.sh
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/config.sh"
+
 echo "Deploying Sealed Secrets..."
 kubectl create namespace kube-system || true
 
@@ -9,7 +13,7 @@ helm repo update
 
 helm upgrade --install sealed-secrets sealed-secrets/sealed-secrets \
   --namespace kube-system \
-  -f ../helm/values/sealed-secrets-values.yaml
+  -f "$HELM_PATH/values/sealed-secrets-values.yaml"
 
 echo "🎉 Sealed Secrets deployed!"
 
