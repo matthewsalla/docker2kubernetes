@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: grafana-tls
+  namespace: monitoring
+spec:
+  secretName: grafana-tls  # ✅ Cert-Manager will create this Secret automatically
+  issuerRef:
+    name: ${CERT_ISSUER}  # This will be replaced by the script
+    kind: ClusterIssuer
+  dnsNames:
+    - grafana.atlasmalt.com  # ✅ This must match the domain in your IngressRoute
