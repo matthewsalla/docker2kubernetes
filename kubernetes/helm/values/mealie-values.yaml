@@ -1,0 +1,38 @@
+strategy:
+  type: Recreate
+
+controllers:
+  main:
+    enabled: true
+    containers:
+      main:
+        image:
+          repository: ghcr.io/mealie-recipes/mealie
+          tag: latest  # Ensure you're using the latest stable release
+          pullPolicy: IfNotPresent
+        env:
+          TZ: America/New_York  # Set to Eastern Time
+          BASE_URL: "https://mealie.atlasmalt.com"
+          DB_ENGINE: sqlite
+          SQLITE_DB_FILE: "/app/data/mealie.db"
+          ALLOW_SIGNUP: "false"  # Disable user signups
+          TOKEN_TIME: "96"  # Token expiration time in hours
+
+service:
+  main:
+    controller: main
+    ports:
+      http: 
+        port: 9000
+
+persistence:
+  data:
+    enabled: true
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    storageClass: longhorn
+    advancedMounts:
+      main:
+        main:
+          - path: /app/data/
+            readOnly: false
