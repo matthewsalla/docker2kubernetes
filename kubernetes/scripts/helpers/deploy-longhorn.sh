@@ -29,6 +29,8 @@ helm upgrade --install longhorn longhorn/longhorn \
 # Apply the Longhorn TLS Certificate
 echo "🔐 Deploying longhorn Certificate..."
 cat "$CERTS_PATH/longhorn-certificate.yaml" | envsubst | kubectl apply -f -
+
+# Apply Longhorn IngressRoute
 kubectl apply -f "$LONGHORN_APP_PATH/longhorn-ingressroute.yaml"
 
 # Update local-path to not be default storage class

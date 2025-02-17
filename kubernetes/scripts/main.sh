@@ -31,4 +31,7 @@ bash helpers/deploy-whoami.sh
 # Step 6: Deploy Longhorn
 bash helpers/deploy-longhorn.sh
 
+# Step 7: Deploy Monitoring Tools
+bash helpers/deploy-monitoring.sh
+
 echo "✅ Deployment Completed Successfully!"

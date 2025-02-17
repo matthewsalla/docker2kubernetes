@@ -1,0 +1,45 @@
+# Disable Alertmanager for now
+alertmanager:
+  enabled: false
+
+# Enable Grafana but keep it out of this deployment
+grafana:
+  enabled: false
+
+# Define Prometheus Operator settings
+prometheus:
+  enabled: true
+  prometheusSpec:
+    serviceMonitorSelector: {}  # Select all ServiceMonitors
+    serviceMonitorNamespaceSelector: {}  # Allow scraping across all namespaces
+    podMonitorSelector: {}  # Select all PodMonitors
+    podMonitorNamespaceSelector: {}  # Allow scraping across all namespaces
+    ruleSelector: {}  # Select all PrometheusRules
+    ruleNamespaceSelector: {}  # Allow rules across all namespaces
+
+    # Storage configuration for persistent data
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: longhorn  # Ensure this matches your StorageClass
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 10Gi
+
+    # Retention settings
+    retention: 10d
+    retentionSize: "10GB"
+
+    # Define scrape configs
+    additionalScrapeConfigs:
+      - job_name: "kubernetes-nodes"
+        kubernetes_sd_configs:
+          - role: node
+      - job_name: "kubernetes-pods"
+        kubernetes_sd_configs:
+          - role: pod
+      - job_name: "kubernetes-services"
+        kubernetes_sd_configs:
+          - role: service
