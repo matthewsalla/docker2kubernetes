@@ -1,76 +1,149 @@
-Docker to K3s Cluster Migration
+### **🚀 README.md – Docker to Kubernetes Migration (AtlasMalt K3s Cluster)**  
 
-Overview
+# **Docker to Kubernetes Migration (AtlasMalt K3s Cluster)**  
 
-This repository contains infrastructure-as-code (IaC) for deploying and managing a K3s Kubernetes cluster using Terraform on a KVM-based environment. The setup includes a control plane node and worker nodes with 1TB storage.
+This repository provides a **structured, automated, and secure** migration process from **Docker to Kubernetes (K3s)**. It includes **Helm-based deployments, infrastructure provisioning (Terraform), persistent storage (Longhorn), GitOps principles, and security best practices** to ensure a **scalable, production-ready Kubernetes cluster**.  
 
-# TODO:  Update documentation!
+---
 
-📌 Features
+## **📂 Repository Overview**  
+| **Directory** | **Description** |
+|--------------|----------------|
+| `kubernetes/apps/` | Kubernetes manifests for individual apps (IngressRoutes, Services, Deployments). |
+| `kubernetes/certificates/` | Cert-Manager configurations for TLS certificates. Sealed Secrets Public Key|
+| `kubernetes/cluster-issuers/` | ClusterIssuer definitions for Let's Encrypt staging & production. |
+| `kubernetes/helm/values/` | Helm values for application deployments. |
+| `kubernetes/middlewares/` | Traefik middlewares for authentication & security. |
+| `kubernetes/scripts/` | Automation scripts for deploying infrastructure & applications. |
+| `kubernetes/secrets/` | **SealedSecrets for securely managing credentials**. |
+| `terraform/` | Terraform scripts to provision infrastructure (VMs, networking, storage). |
 
-- Automated K3s Cluster Deployment
-- Dynamic VM Provisioning with Terraform
-- Cloud-Init for VM Initialization
+---
 
-🚀 Getting Started
+## **🚀 Migration Strategy: Docker to Kubernetes**
+A **7-step structured approach** ensures a smooth and repeatable **Docker to Kubernetes application migration**.  
 
-1️⃣ Prerequisites
+### **1️⃣ App Assessment & Requirements**
+- Identify **dependencies** (databases, volumes, env variables, secrets).  
+- Determine **persistent storage needs** (PVCs via Longhorn).  
+- Define **resource limits & requests** for optimal performance.  
 
-Ensure you have the following installed:
+### **2️⃣ Helm Chart Deployment (Preferred)**
+- Use **Helm charts** for all applications.  
+- Customize **`values.yaml`** to match app requirements.  
+- Store **Helm charts in version control for upgrades**.  
 
-- Terraform (>= 1.3.0)
-- Libvirt / KVM
-- Lens
+### **3️⃣ Direct-to-Production Deployment**
+- Deploy applications **directly to production** using Helm.  
+- Use **Let's Encrypt Staging** for certificate validation (initial).  
+- **Verify application functionality in production** before switching to Let's Encrypt Prod.  
 
-2️⃣ Clone the Repository
+### **4️⃣ Certificate & Security Validation**
+- Use **SealedSecrets for credentials**.  
+- Validate **TLS certificates with Let's Encrypt Staging**.  
+- Test **authentication & access controls**.  
+- Review **RBAC policies for correct permissions**.  
 
-3️⃣ Initialize Terraform
+### **5️⃣ Monitoring & Logging Setup**
+- Ensure **Prometheus/Grafana track application health**.  
+- Configure **alerting for failures & anomalies**.  
+- Verify **Longhorn storage metrics** are available.  
 
+### **6️⃣ Post-Migration Cleanup**
+- **Decommission old Docker-based setup**.  
+- Archive **Docker Compose configurations for reference**.  
+- Document **the migration for future apps**.  
+
+---
+
+## **📦 Kubernetes Deployment Breakdown**
+This repo provisions and manages a **fully automated K3s cluster** with the following components:  
+
+| **Component** | **Description** | **Deployment Method** |
+|--------------|----------------|--------------------|
+| **K3s** | Lightweight Kubernetes distribution | Terraform (`cloud_init.cfg`) |
+| **Longhorn** | Persistent storage solution | Helm (`deploy-longhorn.sh`) |
+| **Traefik v3** | Ingress controller with TLS | Helm (`deploy-traefik.sh`) |
+| **Cert-Manager** | TLS certificate automation | Helm (`deploy-cert-manager.sh`) |
+| **Prometheus & Grafana** | Monitoring stack | Helm (`deploy-monitoring.sh`) |
+| **SealedSecrets** | Encrypted Kubernetes secrets | Helm (`deploy-sealed-secrets.sh`) |
+
+---
+
+## **⚡ Quick Start Guide**
+### **1️⃣ Prerequisites**
+- **Ubuntu 24.04** server  
+- **Helm & Kubectl installed**  
+- **Terraform installed**  
+
+### **2️⃣ Deploy Kubernetes Cluster**
+```bash
+cd terraform
 terraform init
+terraform apply
+```
 
-4️⃣ Deploy VMs
+### **3️⃣ Deploy Core Infrastructure**
+```bash
+cd kubernetes/scripts/helpers
+./deploy-sealed-secrets.sh
+./deploy-cert-manager.sh
+./deploy-traefik.sh
+./deploy-longhorn.sh
+./deploy-monitoring.sh
+```
 
-terraform apply -auto-approve
+### **4️⃣ Deploy Applications**
+```bash
+./deploy-mealie.sh
+./deploy-whoami.sh
+```
 
-5️⃣ Retrieve K3s Token
+### **5️⃣ Verify Deployment**
+```bash
+kubectl get pods -A
+kubectl get ingressroute -A
+kubectl get certificate -A
+```
 
+---
 
-🛑 Common Issues:
+## **🛠 Troubleshooting Logs**
+### **Grafana Authentication Failures**
+✅ **Issue:** "Failed to authenticate request" errors in logs.  
+✅ **Fix:**  
+- **Removed Traefik middleware authentication** (was redundant).  
+- **Cleared browser cache** (Cognito mode confirmed caching issue).  
+- **Restarted Grafana to reset authentication state**.  
 
-Cloud-Init Failing: Check logs with:
+### **Prometheus PVC Binding Issues**
+✅ **Issue:** PVCs were not attaching properly.  
+✅ **Fix:**  
+- Used **`storageSpec.volumeClaimTemplate`** instead of `persistentVolume`.  
+- Ensured **Longhorn was set as the default storage class**.  
 
-journalctl -u cloud-init --no-pager | less
+### **Debugging Grafana-Prometheus Connectivity**
+✅ **Issue:** Grafana dashboards showed **"No Data"**.  
+✅ **Fix:**  
+- **Verified Prometheus service endpoint** (`kubectl get svc -n monitoring`).  
+- **Updated `datasources.yaml`** in Grafana with the correct Prometheus URL.  
 
-SSH Issues: Ensure SSH keys are correctly injected:
+---
 
-cat ~/.ssh/authorized_keys
+## **🔮 Future Enhancements**
+🔹 **Solve Persistent Storage Across Cluster Nukes**  
+🔹 **Implement Longhorn Backup & Restore Strategy**  
+🔹 **Integrate ArgoCD for GitOps & Deployment Automation**  
+🔹 **Migrate Additional Stateful Apps (Jellyfin, Nextcloud, etc.)**  
 
-K3s Agent Nodes Not Joining:
+---
 
-sudo cat /var/lib/rancher/k3s/agent/k3s-agent.log | grep 'token'
+## **🤝 Contributions & Feedback**
+This is an active migration project!  If you have **improvements, issues, or suggestions**, feel free to **open a PR or discussion**.  
 
+---
 
-📌 Next Steps
+### **📢 Shoutout**
+This project is part of my **ongoing Kubernetes migration series**.  Follow along as I **move more services from Docker to K3s** while optimizing performance, security, and automation. 🚀  
 
-✅ Finalize automated Terraform provisioning.
-
-⏳ Set up Sealed Secrets for Kubernetes.
-
-⏳ Deploy Longhorn and schedule backups.
-
-📜 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-🤝 Contributing
-
-Pull requests are welcome! For major changes, please open an issue first to discuss what you’d like to change.
-
-🛠 Maintainers
-
-Matt Salla (@matthewsalla)
-
-📞 Contact
-
-For questions, issues, or feature requests, open a GitHub issue or reach out to Matt Salla.
-
+#Kubernetes #K3s #DockerToK8s #DevOps #InfrastructureAsCode #CloudComputing  
