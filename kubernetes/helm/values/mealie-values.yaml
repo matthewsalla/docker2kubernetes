@@ -17,6 +17,14 @@ controllers:
           SQLITE_DB_FILE: "/app/data/mealie.db"
           ALLOW_SIGNUP: "false"  # Disable user signups
           TOKEN_TIME: "96"  # Token expiration time in hours
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "512Mi"
+          limits:
+            cpu: "500m"
+            memory: "1Gi"
+
 
 service:
   main:
