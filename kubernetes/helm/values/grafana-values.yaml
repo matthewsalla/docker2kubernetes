@@ -20,35 +20,40 @@ datasources:
         url: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
         access: proxy
 
+# Provision grafana-dashboards-kubernetes
 dashboardProviders:
-  dashboard.yaml:
+  dashboardproviders.yaml:
     apiVersion: 1
     providers:
-      - name: "default"
-        orgId: 1
-        folder: "/var/lib/grafana/dashboards"
-        type: file
-        disableDeletion: false
-        editable: true
-        options:
-          path: "/var/lib/grafana/dashboards"
+    - name: 'grafana-dashboards-kubernetes'
+      orgId: 1
+      folder: 'Kubernetes'
+      type: file
+      disableDeletion: true
+      editable: true
+      options:
+        path: /var/lib/grafana/dashboards/grafana-dashboards-kubernetes
 
 dashboards:
-  default:
-    kubernetes-overview:
-      gnetId: 3146  # Built-in K8s Overview Dashboard
-      revision: 1
-      datasource: Prometheus
-
-extraVolumeMounts:
-  - name: dashboards
-    mountPath: /var/lib/grafana/dashboards/
-    readOnly: true
-
-extraVolumes:
-  - name: dashboards
-    configMap:
-      name: grafana-dashboards
+  grafana-dashboards-kubernetes:
+    k8s-system-api-server:
+      url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-system-api-server.json
+      token: ''
+    k8s-system-coredns:
+      url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-system-coredns.json
+      token: ''
+    k8s-views-global:
+      url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-views-global.json
+      token: ''
+    k8s-views-namespaces:
+      url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-views-namespaces.json
+      token: ''
+    k8s-views-nodes:
+      url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-views-nodes.json
+      token: ''
+    k8s-views-pods:
+      url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-views-pods.json
+      token: ''
 
 grafana.ini:
   log:
@@ -62,5 +67,3 @@ grafana.ini:
   security:
     disable_brute_force_login_protection: false
     disable_login_form: false
-  # live:
-  #   enabled: false  # Disable Grafana Live
