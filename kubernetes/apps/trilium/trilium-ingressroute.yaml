@@ -1,0 +1,16 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: trilium
+  namespace: trilium
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`trilium.atlasmalt.com`)
+      kind: Rule
+      services:
+        - name: trilium
+          port: 8080
+  tls:
+    secretName: trilium-tls  # ✅ Must match the Certificate resource secretName
