@@ -34,4 +34,10 @@ bash helpers/deploy-longhorn.sh
 # Step 7: Deploy Monitoring Tools
 bash helpers/deploy-monitoring.sh
 
+# Step 8: Deploy Mealie
+bash helpers/deploy-mealie.sh
+
+# Step 9: Deploy TriliumNext
+bash helpers/deploy-trilium.sh
+
 echo "✅ Deployment Completed Successfully!"

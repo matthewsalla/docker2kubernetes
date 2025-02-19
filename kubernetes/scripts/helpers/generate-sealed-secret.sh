@@ -29,7 +29,7 @@ EOF
 
 # Create sealed secret
 kubeseal --format yaml \
-  --cert=../certificates/sealed-secret-controller-cert.pem \
+  --cert=../certs/sealed-secret-controller-cert.pem \
   < temp-secret.yaml > "../secrets/$SECRET_NAME-sealed-secret.yaml"
 
 # Cleanup and report

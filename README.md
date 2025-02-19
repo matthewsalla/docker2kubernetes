@@ -10,7 +10,7 @@ This repository provides a **structured, automated, and secure** migration proce
 | **Directory** | **Description** |
 |--------------|----------------|
 | `kubernetes/apps/` | Kubernetes manifests for individual apps (IngressRoutes, Services, Deployments). |
-| `kubernetes/certificates/` | Cert-Manager configurations for TLS certificates. Sealed Secrets Public Key|
+| `kubernetes/certs/` | Cert-Manager configurations for TLS certificates. Sealed Secrets Public Key|
 | `kubernetes/cluster-issuers/` | ClusterIssuer definitions for Let's Encrypt staging & production. |
 | `kubernetes/helm/values/` | Helm values for application deployments. |
 | `kubernetes/middlewares/` | Traefik middlewares for authentication & security. |
@@ -134,7 +134,7 @@ kubectl get certificate -A
 🔹 **Solve Persistent Storage Across Cluster Nukes**  
 🔹 **Implement Longhorn Backup & Restore Strategy**  
 🔹 **Integrate ArgoCD for GitOps & Deployment Automation**  
-🔹 **Migrate Additional Stateful Apps (Jellyfin, Nextcloud, etc.)**  
+🔹 **Migrate Additional Stateful Apps (Nextcloud, Firefly III, Logitech Media Server, etc.)**  
 
 ---
 
