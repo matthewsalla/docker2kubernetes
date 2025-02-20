@@ -42,7 +42,11 @@ done
 echo "Done!"
 
 echo "🛑 Import K3s KUBECONFIG..."
-rm ~/.kube/atlasmalt_config
+
+if [ -f ~/.kube/atlasmalt_config ]; then
+  rm ~/.kube/atlasmalt_config
+fi
+
 ssh -o StrictHostKeyChecking=no ubuntu@192.168.14.80 "sudo cat /etc/rancher/k3s/k3s.yaml" > ~/.kube/atlasmalt_config
 sed -i '' 's/127.0.0.1/192.168.14.80/g' ~/.kube/atlasmalt_config
 echo "✅ Done!"
