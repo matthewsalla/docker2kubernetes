@@ -17,11 +17,6 @@ variable "k3s_cluster_main_pool_name" {
   description = "Main storage pool name for all nodes"
 }
 
-# Create a storage pools for distributed drives
-variable "longhorn_storage_pools" {
-  type = map(string)
-}
-
 variable "control_plane_ip" {
   type        = string
   description = "IP address of the K3s control plane"

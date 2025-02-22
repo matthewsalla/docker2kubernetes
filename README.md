@@ -128,6 +128,14 @@ kubectl get certificate -A
 - **Verified Prometheus service endpoint** (`kubectl get svc -n monitoring`).  
 - **Updated `datasources.yaml`** in Grafana with the correct Prometheus URL.  
 
+## Virsh Overview Command
+
+Run the following one-liner to get an overview of your current virsh state:
+
+```bash
+echo "=== Storage Pools ===" && virsh pool-list --all && echo "=== Domains ===" && virsh list --all && echo "=== Volumes per Pool ===" && for pool in $(virsh pool-list --name); do echo "Pool: $pool"; virsh vol-list --pool "$pool"; echo "----------------"; done
+```
+
 ---
 
 ## **🔮 Future Enhancements**
