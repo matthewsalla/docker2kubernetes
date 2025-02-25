@@ -24,6 +24,10 @@ if [[ "$confirm" != "yes" ]]; then
     exit 1
 fi
 
+echo "🚀 Backing up volumes on the cluster..."
+./longhorn-automation.sh backup
+echo "🚀 Volumes backed up"
+
 echo "🛑 Removing old SSH known_hosts entry for 192.168.14.80..."
 sed -i '' '/192.168.14.80/d' ~/.ssh/known_hosts
 echo "✅ Done!"
@@ -34,7 +38,7 @@ echo "🔥 Destroying existing cluster..."
 echo "🚀 Rebuilding the cluster..."
 (cd ../../terraform && terraform apply --auto-approve)
 
-for i in {15..1}; do
+for i in {25..1}; do
   echo "⏳ Waiting... $i seconds left"
   sleep 1
 done
