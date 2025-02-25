@@ -1,0 +1,10 @@
+apiVersion: longhorn.io/v1beta2
+kind: Volume
+metadata:
+  name: trilium-pv
+  namespace: longhorn-system
+spec:
+  numberOfReplicas: 3
+  frontend: blockdev
+  backupTargetName: default
+  fromBackup: "s3://longhorn-backups@192.168.14.222:9900/longhorn?backup=backup-edadd4f189a04c20&volume=trilium-pv"

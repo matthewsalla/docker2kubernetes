@@ -12,8 +12,15 @@ echo "📡 Deploying Trilium..."
 # Create Namespace
 kubectl create namespace trilium || true
 
+# Restore Persistent Volume from backup for Trilium
+echo "🔐 Restoring Data Volume..."
+# kubectl apply -f "$TRILIUM_APP_PATH/trilium-restored.yaml"
+kubectl apply -f "$TRILIUM_APP_PATH/trilium-restored-pv.yaml"
+kubectl apply -f "$TRILIUM_APP_PATH/trilium-restored-pvc.yaml"
+echo "✅ Persistent Data Volume Restored!"
+
 # Deploy Trilium
-helm upgrade --install trilium ../helm/charts/trilium \
+helm upgrade --install trilium "$HELM_PATH/charts/trilium" \
   --namespace trilium \
   --values "$HELM_PATH/values/trilium-values.yaml"
 

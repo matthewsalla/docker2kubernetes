@@ -1,0 +1,10 @@
+apiVersion: longhorn.io/v1beta2
+kind: Volume
+metadata:
+  name: trilium-pv
+  namespace: longhorn-system
+spec:
+  numberOfReplicas: 3           # Set desired replica count
+  frontend: blockdev            # Standard setting for block devices
+  backupTargetName: default     # Must match your backup target name
+  fromBackup: "s3://longhorn-backups@192.168.14.222:9900/longhorn?backup=backup-9b5796d59a0a43d5&volume=trilium-pv"
