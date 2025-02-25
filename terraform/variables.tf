@@ -17,11 +17,6 @@ variable "k3s_cluster_main_pool_name" {
   description = "Main storage pool name for all nodes"
 }
 
-# Create a storage pools for distributed drives
-variable "longhorn_storage_pools" {
-  type = map(string)
-}
-
 variable "control_plane_ip" {
   type        = string
   description = "IP address of the K3s control plane"
@@ -54,7 +49,9 @@ variable "k3s_nodes" {
     ram               = number
     disk              = number
     cloud_init        = string  # e.g. "control-plane" or "worker-node"
-    longhorn_disk_path = string # If non-empty, create & attach a 1TB disk
+    longhorn_pool_name = string
+    longhorn_pool_path = string
+    longhorn_disk = string # If non-empty, create & attach a 1TB disk
     ip_address        = string
     hostname          = string
   }))

@@ -1,0 +1,7 @@
+apiVersion: longhorn.io/v1beta1
+kind: Node
+metadata:
+  name: atlasmalt-kube-vm-control
+  namespace: longhorn-system
+spec:
+  allowScheduling: false
