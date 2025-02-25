@@ -36,6 +36,12 @@ kubectl apply -f "$LONGHORN_APP_PATH/longhorn-ingressroute.yaml"
 # Update local-path to not be default storage class
 kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'
 
+echo "Waiting for Longhorn to be fully available..."
+kubectl wait --for=condition=available --timeout=300s deployment --all -n longhorn-system
+
+echo "Applying patch to disable scheduling on the control-plane node..."
+kubectl apply -f "$LONGHORN_APP_PATH/disable-longhorn-scheduling.yaml"
+
 echo "✅ Longhorn deployment completed successfully!"
 
 echo "🎉 Longhorn deployed!"

@@ -16,23 +16,22 @@ resource "libvirt_pool" "k3s_cluster_main_pool_main" {
 }
 
 resource "libvirt_pool" "longhorn_pools" {
-  for_each = var.longhorn_storage_pools
+  for_each = { for key, value in var.k3s_nodes : key => value if value.longhorn_disk != "" }
 
-  name = each.key
+  name = each.value.longhorn_pool_name
   type = "dir"
 
   target {
-    path = each.value
+    path = each.value.longhorn_pool_path
   }
 }
 
-
 # Create a 1TB QCOW2 disk for Longhorn storage
 resource "libvirt_volume" "longhorn_disks" {
-  for_each = { for key, value in var.k3s_nodes : key => value if value.longhorn_disk_path != "" }
+  for_each = { for key, value in var.k3s_nodes : key => value if value.longhorn_disk != "" }
 
-  name     = "${each.key}-longhorn.qcow2"
-  pool   = libvirt_pool.longhorn_pools[each.value.longhorn_disk_path].name  # Use dynamically created pools
+  name     = "${each.value.longhorn_disk}"
+  pool   = libvirt_pool.longhorn_pools[each.key].name  # Use dynamically created pools
   format   = "qcow2"
   size     = 1073741824000  # 1TB in bytes
 
@@ -99,7 +98,7 @@ resource "libvirt_domain" "k3_nodes" {
 
   # Attach the Longhorn disk only for worker nodes
   dynamic "disk" {
-    for_each = each.value.longhorn_disk_path != "" ? [1] : []
+    for_each = each.value.longhorn_disk != "" ? [1] : []
     content {
       volume_id = libvirt_volume.longhorn_disks[each.key].id
     }
