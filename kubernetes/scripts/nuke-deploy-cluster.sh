@@ -1,5 +1,31 @@
 #!/bin/bash
-set -e  # Exit immediately if a command exits with a non-zero status
+set -euo pipefail
+
+# Load sensitive configuration from .env
+if [ -f .env ]; then
+  source .env
+else
+  echo "Missing .env file. Exiting."
+  exit 1
+fi
+
+# Check for required commands
+for cmd in jq hcl2json; do
+  if ! command -v "$cmd" &>/dev/null; then
+    echo "Error: $cmd is not installed. Please install $cmd (e.g., 'brew install $cmd' on macOS)."
+    exit 1
+  fi
+done
+
+echo "All required commands (jq and hcl2json) are installed."
+TFVARS_FILE="../../terraform/terraform.tfvars"
+TFVARS_JSON=$(hcl2json "$TFVARS_FILE")
+CONTROL_PLANE_IP=$(echo "$TFVARS_JSON" | jq -r '.k3s_nodes["control-plane"].ip_address')
+
+if [[ -z "$CONTROL_PLANE_IP" || "$CONTROL_PLANE_IP" == "null" ]]; then
+  echo "Error: Control plane IP not found in $TFVARS_FILE."
+  exit 1
+fi
 
 DEPLOYMENT_MODE=${1:-prod}
 # Check for "staging" argument
@@ -24,9 +50,13 @@ if [[ "$confirm" != "yes" ]]; then
     exit 1
 fi
 
-echo "🚀 Backing up volumes on the cluster..."
-./longhorn-automation.sh backup
-echo "🚀 Volumes backed up"
+echo "⚠️ WARNING: Would you like to backup the persistent volumes?"
+read -p "Create Backups? (yes/no): " confirm
+if [[ "$confirm" = "yes" ]]; then
+    echo "🚀 Backing up volumes on the cluster..."
+    ./longhorn-automation.sh backup
+    echo "🚀 Volumes backed up"
+fi
 
 echo "🔥 Destroying existing cluster..."
 (cd ../../terraform && terraform destroy --auto-approve)
@@ -41,14 +71,15 @@ done
 
 echo "Done!"
 
+echo "Control plane IP: $CONTROL_PLANE_IP"
 echo "🛑 Import K3s KUBECONFIG..."
 
-if [ -f ~/.kube/atlasmalt_config ]; then
-  rm ~/.kube/atlasmalt_config
+if [ -f "$TF_KUBECONFIG" ]; then
+  rm "$TF_KUBECONFIG"
 fi
 
-ssh -o StrictHostKeyChecking=no ubuntu@192.168.14.80 "sudo cat /etc/rancher/k3s/k3s.yaml" > ~/.kube/atlasmalt_config
-sed -i '' 's/127.0.0.1/192.168.14.80/g' ~/.kube/atlasmalt_config
+ssh -o StrictHostKeyChecking=no ubuntu@"$CONTROL_PLANE_IP" "sudo cat /etc/rancher/k3s/k3s.yaml" > "$TF_KUBECONFIG"
+sed -i '' "s/127.0.0.1/$CONTROL_PLANE_IP/g" "$TF_KUBECONFIG"
 echo "✅ Done!"
 
 echo "🎉 K3s Cluster is deployed!"

@@ -17,6 +17,15 @@ else
   exit 1
 fi
 
+# Check for required commands
+for cmd in jq hcl2json; do
+  if ! command -v "$cmd" &>/dev/null; then
+    echo "Error: $cmd is not installed. Please install $cmd (e.g., 'brew install $cmd' on macOS)."
+    exit 1
+  fi
+done
+
+echo "All required commands (jq and hcl2json) are installed."
 # The volume name you want to backup/restore
 VOLUME_NAME="trilium-pv"
 # The backup mode – "incremental" or "full"
