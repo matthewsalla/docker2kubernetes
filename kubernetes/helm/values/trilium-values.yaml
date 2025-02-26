@@ -10,10 +10,37 @@ service:
   port: 8080
 
 ingress:
-  enabled: false
+  enabled: true
+  host: "trilium.atlasmalt.com"
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    traefik.ingress.kubernetes.io/router.tls: "true"
+  tls:
+    secretName: "trilium-tls"
+service:
+  port: 8080
+
+certificate:
+  enabled: true
+  name: trilium-tls
+  secretName: trilium-tls
+  issuer:
+    name: "letsencrypt-staging"
+    kind: ClusterIssuer
+  dnsNames:
+    - trilium.atlasmalt.com
 
 persistence:
-  enabled: false
+  createPVC: true            # Always create the PVC via the chart
+  restorePV: true             # Set this to true if you are restoring from backup
+  pvcName: "trilium-pvc"
+  pvName: "trilium-pv"       # Used for the static PV (restored volume)
+  size: "5Gi"
+  accessMode: "ReadWriteOnce"
+  reclaimPolicy: "Retain"
+  storageClassName: "longhorn"
+  csiDriver: "driver.longhorn.io"
+  volumeHandle: "trilium-pv" # Must exactly match the restored volume’s name
 
 resources:
   limits:

@@ -27,7 +27,7 @@ if [[ -z "$CONTROL_PLANE_IP" || "$CONTROL_PLANE_IP" == "null" ]]; then
   exit 1
 fi
 
-DEPLOYMENT_MODE=${1:-prod}
+DEPLOYMENT_MODE=${1:-staging}
 # Check for "staging" argument
 if [[ "$1" == "staging" ]]; then
     CERT_ISSUER="letsencrypt-staging"
@@ -50,7 +50,7 @@ if [[ "$confirm" != "yes" ]]; then
     exit 1
 fi
 
-echo "⚠️ WARNING: Would you like to backup the persistent volumes?"
+echo "⚠️ WARNING: Would you like to first create a backup of the persistent volumes?"
 read -p "Create Backups? (yes/no): " confirm
 if [[ "$confirm" = "yes" ]]; then
     echo "🚀 Backing up volumes on the cluster..."

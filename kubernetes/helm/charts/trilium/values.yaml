@@ -11,24 +11,36 @@ service:
 
 ingress:
   enabled: true
-  className: "traefik"
+  host: "trilium.example.com"
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-  hosts:
-    - host: trilium.atlasmalt.com
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    traefik.ingress.kubernetes.io/router.tls: "true"
   tls:
-    - hosts:
-        - trilium.atlasmalt.com
-      secretName: trilium-tls
+    secretName: "trilium-tls"
+service:
+  port: 8080
+
+certificate:
+  enabled: true
+  name: trilium-tls
+  secretName: trilium-tls
+  issuer:
+    name: "letsencrypt-staging"  # This value can be set via your CI/CD pipeline or .env file
+    kind: ClusterIssuer
+  dnsNames:
+    - trilium.example.com
 
 persistence:
-  enabled: true
-  storageClass: "longhorn"
-  accessMode: ReadWriteOnce
-  size: 5Gi
+  createPVC: true            # Always create the PVC via the chart
+  restorePV: false             # Set this to true if you are restoring from backup
+  pvcName: "trilium-pvc"
+  pvName: "trilium-pv"       # Used for the static PV (restored volume)
+  size: "5Gi"
+  accessMode: "ReadWriteOnce"
+  reclaimPolicy: "Retain"
+  storageClassName: "longhorn"
+  csiDriver: "driver.longhorn.io"
+  volumeHandle: "trilium-pv" # Must exactly match the restored volume’s name
 
 resources:
   limits:
