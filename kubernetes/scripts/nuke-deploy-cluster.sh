@@ -28,10 +28,6 @@ echo "🚀 Backing up volumes on the cluster..."
 ./longhorn-automation.sh backup
 echo "🚀 Volumes backed up"
 
-echo "🛑 Removing old SSH known_hosts entry for 192.168.14.80..."
-sed -i '' '/192.168.14.80/d' ~/.ssh/known_hosts
-echo "✅ Done!"
-
 echo "🔥 Destroying existing cluster..."
 (cd ../../terraform && terraform destroy --auto-approve)
 

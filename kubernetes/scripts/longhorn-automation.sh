@@ -17,9 +17,6 @@ else
   exit 1
 fi
 
-# Configuration variables – adjust as needed
-# Ensure LONGHORN_MANAGER is reachable (e.g., via port-forwarding if necessary)
-# LONGHORN_MANAGER="localhost:9500"
 # The volume name you want to backup/restore
 VOLUME_NAME="trilium-pv"
 # The backup mode – "incremental" or "full"
@@ -100,16 +97,37 @@ elif [ "$MODE" == "restore" ]; then
   # Step 5: Wait for the backup target to be healthy and backups available
   echo "Waiting for backup ID '$BACKUP_ID' to reach Completed state..."
   for i in {1..30}; do
-    CURRENT_RESPONSE=$(curl -s -u "$LONGHORN_USER:$LONGHORN_PASS" -X POST https://${LONGHORN_MANAGER}/v1/backupvolumes/${BACKUP_VOLUME_ID}?action=backupList)
-    CURRENT_STATE=$(echo "$CURRENT_RESPONSE" | jq -r --arg bid "$BACKUP_ID" '.data[] | select(.id==$bid) | .state')
-    echo "${CURRENT_STATE}"
-    if [ "$CURRENT_STATE" == "Completed" ]; then
-        echo "Backup $BACKUP_ID is completed."
-        break
-    fi
-    echo "Backup $BACKUP_ID is not completed yet (state: $CURRENT_STATE). Waiting 10 seconds... ($i/30)"
-    sleep 10
+      CURRENT_RESPONSE=$(curl -s -u "$LONGHORN_USER:$LONGHORN_PASS" -X POST "https://${LONGHORN_MANAGER}/v1/backupvolumes/${BACKUP_VOLUME_ID}?action=backupList")
+      
+      # Check if the response appears to be valid JSON (starts with '{')
+      if [[ "$CURRENT_RESPONSE" != \{* ]]; then
+          echo "Received non-JSON response: $CURRENT_RESPONSE. Retrying... ($i/30)"
+          sleep 10
+          continue
+      fi
+
+      echo "Current backupvolumes response:"
+      echo "$CURRENT_RESPONSE"
+
+      # Use jq to extract the state for our backup ID
+      CURRENT_STATE=$(echo "$CURRENT_RESPONSE" | jq -r --arg bid "$BACKUP_ID" '.data[] | select(.id==$bid) | .state')
+      echo "Current backup state: ${CURRENT_STATE}"
+      
+      if [ "$CURRENT_STATE" == "Completed" ]; then
+          echo "Backup $BACKUP_ID is completed."
+          break
+      fi
+      echo "Backup $BACKUP_ID is not yet complete (state: $CURRENT_STATE). Waiting 10 seconds... ($i/30)"
+      sleep 10
   done
+
+  if [ "$CURRENT_STATE" != "Completed" ]; then
+      echo "Error: Backup did not reach 'Completed' state within expected time."
+      exit 1
+  fi
+
+  echo "Backup is now ready for restore."
+
 
   # Step 6: Generate the restore manifest (Volume CR)
   cat > "$RESTORE_OUTPUT" <<EOF
