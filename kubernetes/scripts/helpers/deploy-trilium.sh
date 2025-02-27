@@ -17,6 +17,7 @@ echo "✅ Persistent Data Volume Restored!"
 # Deploy Trilium
 helm upgrade --install trilium "$HELM_PATH/charts/trilium" \
   --namespace trilium \
-  --values "$HELM_PATH/values/trilium-values.yaml"
+  --values "$HELM_PATH/values/trilium-values.yaml" \
+  --values "$HELM_PATH/values/trilium-restored-volume.yaml"
 
 echo "✅ Trilium Deployed Successfully!"
