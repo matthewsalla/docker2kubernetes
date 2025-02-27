@@ -32,7 +32,7 @@ certificate:
 
 persistence:
   createPVC: true            # Always create the PVC via the chart
-  restore: true             # Set this to true if you are restoring from backup
+  restore: false             # Set this to true if you are restoring from backup
   pvcName: "trilium-pvc"
   pvName: "trilium-pv"       # Used for the static PV (restored volume)
   size: "5Gi"

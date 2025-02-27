@@ -162,7 +162,7 @@ EOF
   kubectl patch volume trilium-pv -n longhorn-system --type=json -p='[
     {"op": "add", "path": "/metadata/labels/app.kubernetes.io~1managed-by", "value": "Helm"},
     {"op": "add", "path": "/metadata/annotations/meta.helm.sh~1release-name", "value": "trilium"},
-    {"op": "add", "path": "/metadata/annotations/meta.helm.sh~1release-namespace", "value": "longhorn-system"}
+    {"op": "add", "path": "/metadata/annotations/meta.helm.sh~1release-namespace", "value": "trilium"}
   ]'
 
   exit 0
