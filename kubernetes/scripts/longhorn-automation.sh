@@ -102,7 +102,7 @@ elif [ "$MODE" == "restore" ]; then
 
   # Wait for backup volume to become available
   for i in {1..30}; do
-    BACKUP_VOLUME_ID=$(curl -s -u "$LONGHORN_USER:$LONGHORN_PASS" https://${LONGHORN_MANAGER}/v1/backupvolumes | jq -r '.data[] | select(.volumeName=="trilium-pv") | .id')
+    BACKUP_VOLUME_ID=$(curl -s -u "$LONGHORN_USER:$LONGHORN_PASS" "https://${LONGHORN_MANAGER}/v1/backupvolumes" | jq -r --arg vol "$VOLUME_NAME" '.data[] | select(.volumeName==$vol) | .id')
     if [ -n "$BACKUP_VOLUME_ID" ] && [ "$BACKUP_VOLUME_ID" != "null" ]; then
       echo "Backup volume found: $BACKUP_VOLUME_ID"
       break
