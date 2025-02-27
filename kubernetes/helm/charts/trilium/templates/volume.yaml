@@ -1,0 +1,11 @@
+{{- if not (.Values.persistence.restore) }}
+apiVersion: longhorn.io/v1beta2
+kind: Volume
+metadata:
+  name: {{ .Values.persistence.pvName | quote }}
+  namespace: longhorn-system
+spec:
+  numberOfReplicas: {{ .Values.persistence.numberOfReplicas }}
+  frontend: {{ .Values.persistence.frontend | quote }}
+  backupTargetName: {{ .Values.persistence.backupTargetName | quote }}
+{{- end }}

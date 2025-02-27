@@ -4,9 +4,6 @@ set -e  # Exit on error
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/config.sh"
 
-# Define paths to manifests
-TRILIUM_APP_PATH="$APPS_PATH/trilium"
-
 echo "📡 Deploying Trilium..."
 
 # Create Namespace

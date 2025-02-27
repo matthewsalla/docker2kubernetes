@@ -32,7 +32,7 @@ certificate:
 
 persistence:
   createPVC: true            # Always create the PVC via the chart
-  restorePV: false             # Set this to true if you are restoring from backup
+  restore: false             # Set this to true if you are restoring from backup
   pvcName: "trilium-pvc"
   pvName: "trilium-pv"       # Used for the static PV (restored volume)
   size: "5Gi"
@@ -41,6 +41,9 @@ persistence:
   storageClassName: "longhorn"
   csiDriver: "driver.longhorn.io"
   volumeHandle: "trilium-pv" # Must exactly match the restored volume’s name
+  numberOfReplicas: 3
+  frontend: blockdev
+  backupTargetName: default
 
 resources:
   limits:

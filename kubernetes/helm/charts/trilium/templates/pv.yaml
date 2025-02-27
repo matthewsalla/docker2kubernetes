@@ -1,8 +1,9 @@
-{{- if .Values.persistence.restorePV }}
+{{- if .Values.persistence.restore }}
 apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: {{ .Values.persistence.pvName | quote }}
+  namespace: {{ .Release.Namespace }}
 spec:
   capacity:
     storage: {{ .Values.persistence.size | quote }}

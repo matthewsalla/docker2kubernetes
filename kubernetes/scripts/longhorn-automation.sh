@@ -159,6 +159,12 @@ EOF
   kubectl apply -f "$RESTORE_OUTPUT"
   echo "Restore manifest applied."
 
+  kubectl patch volume trilium-pv -n longhorn-system --type=json -p='[
+    {"op": "add", "path": "/metadata/labels/app.kubernetes.io~1managed-by", "value": "Helm"},
+    {"op": "add", "path": "/metadata/annotations/meta.helm.sh~1release-name", "value": "trilium"},
+    {"op": "add", "path": "/metadata/annotations/meta.helm.sh~1release-namespace", "value": "longhorn-system"}
+  ]'
+
   exit 0
 else
   echo "Invalid mode. Use 'backup' or 'restore'."
