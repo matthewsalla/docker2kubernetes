@@ -17,16 +17,6 @@ variable "k3s_cluster_main_pool_name" {
   description = "Main storage pool name for all nodes"
 }
 
-variable "control_plane_ip" {
-  type        = string
-  description = "IP address of the K3s control plane"
-}
-
-variable "worker_node_ips" {
-  type = map(string)
-  description = "Worker node IP addresses"
-}
-
 variable "gateway_ip" {
   type        = string
   description = "IP address of the Gateway (typically the router)"

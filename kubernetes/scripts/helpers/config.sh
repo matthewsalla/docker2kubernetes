@@ -9,6 +9,6 @@ export MIDDLEWARES_PATH="../middlewares"
 export HELM_PATH="../helm"
 
 # Default values for environment variables
-export CERT_ISSUER=${CERT_ISSUER:-letsencrypt-prod}
+export CERT_ISSUER=${CERT_ISSUER:-letsencrypt-staging}
 
 echo "🔧 Using ClusterIssuer: $CERT_ISSUER"

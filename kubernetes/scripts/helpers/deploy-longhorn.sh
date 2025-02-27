@@ -15,6 +15,10 @@ echo "Importing Longhorn auth key"
 kubectl apply -f "$SECRETS_PATH/longhorn-auth-sealed-secret.yaml"
 echo "Longhorn Auth Key Imported Successfully!"
 
+echo "Importing MinIO Credentials"
+kubectl apply -f "$SECRETS_PATH/minio-credentials-sealed-secret.yaml"
+echo "MinIO Credentials Imported Successfully!"
+
 echo "Importing Longhorn middlewares auth"
 kubectl apply -f "$MIDDLEWARES_PATH/longhorn-auth-middleware.yaml"
 echo "Longhorn Middlewares Auth Imported Successfully!"
@@ -41,6 +45,9 @@ kubectl wait --for=condition=available --timeout=300s deployment --all -n longho
 
 echo "Applying patch to disable scheduling on the control-plane node..."
 kubectl apply -f "$LONGHORN_APP_PATH/disable-longhorn-scheduling.yaml"
+
+echo "Applying backup target settings..."
+kubectl apply -f "$LONGHORN_APP_PATH/longhorn-settings.yaml"
 
 echo "✅ Longhorn deployment completed successfully!"
 

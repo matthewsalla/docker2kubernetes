@@ -1,0 +1,12 @@
+apiVersion: longhorn.io/v1beta2
+kind: Volume
+metadata:
+  name: {{ .Values.persistence.pvName | quote }}
+  namespace: longhorn-system
+spec:
+  numberOfReplicas: {{ .Values.persistence.numberOfReplicas }}
+  frontend: {{ .Values.persistence.frontend | quote }}
+  backupTargetName: {{ .Values.persistence.backupTargetName | quote }}
+  {{- if .Values.persistence.restore }}
+  fromBackup: {{ .Values.persistence.fromBackup | quote }}
+  {{- end }}
