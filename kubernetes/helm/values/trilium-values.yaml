@@ -17,8 +17,6 @@ ingress:
     traefik.ingress.kubernetes.io/router.tls: "true"
   tls:
     secretName: "trilium-tls"
-service:
-  port: 8080
 
 certificate:
   enabled: true
