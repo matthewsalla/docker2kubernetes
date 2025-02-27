@@ -100,7 +100,17 @@ elif [ "$MODE" == "restore" ]; then
   fi
   echo "Using backup ID: $BACKUP_ID"
 
-  BACKUP_VOLUME_ID=$(curl -s -u "$LONGHORN_USER:$LONGHORN_PASS" https://${LONGHORN_MANAGER}/v1/backupvolumes | jq -r '.data[] | select(.volumeName=="trilium-pv") | .id')
+  # Wait for backup volume to become available
+  for i in {1..30}; do
+    BACKUP_VOLUME_ID=$(curl -s -u "$LONGHORN_USER:$LONGHORN_PASS" https://${LONGHORN_MANAGER}/v1/backupvolumes | jq -r '.data[] | select(.volumeName=="trilium-pv") | .id')
+    if [ -n "$BACKUP_VOLUME_ID" ] && [ "$BACKUP_VOLUME_ID" != "null" ]; then
+      echo "Backup volume found: $BACKUP_VOLUME_ID"
+      break
+    fi
+    echo "Backup volume not yet available, waiting 10 seconds... ($i/30)"
+    sleep 10
+  done
+
   echo "Backup Volume ID: $BACKUP_VOLUME_ID"
   
   # Step 5: Wait for the backup target to be healthy and backups available
