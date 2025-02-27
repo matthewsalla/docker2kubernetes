@@ -1,3 +1,10 @@
+{{- /*
+Convert a size in Gi (e.g. "5Gi") to bytes.
+*/ -}}
+{{- $sizeStr := .Values.persistence.size | trimSuffix "Gi" -}}
+{{- $sizeGi := $sizeStr | int -}}
+{{- $sizeBytes := mul $sizeGi (mul 1024 (mul 1024 1024)) -}}
+
 apiVersion: longhorn.io/v1beta2
 kind: Volume
 metadata:
@@ -7,6 +14,7 @@ spec:
   numberOfReplicas: {{ .Values.persistence.numberOfReplicas }}
   frontend: {{ .Values.persistence.frontend | quote }}
   backupTargetName: {{ .Values.persistence.backupTargetName | quote }}
+  size: "{{ $sizeBytes }}"
   {{- if .Values.persistence.restore }}
   fromBackup: {{ .Values.persistence.fromBackup | quote }}
   {{- end }}

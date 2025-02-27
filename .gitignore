@@ -2,6 +2,7 @@
 
 # Ignore dynamically generated manifests used to restore data
 *-restored-volume.yaml
+backup_id_*
 
 # Local .terraform directories
 **/.terraform/*
