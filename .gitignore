@@ -1,7 +1,7 @@
 .env
 
 # Ignore dynamically generated manifests used to restore data
-trilium-restored.yaml
+*-restored-volume.yaml
 
 # Local .terraform directories
 **/.terraform/*
