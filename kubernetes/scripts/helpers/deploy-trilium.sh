@@ -11,7 +11,7 @@ kubectl create namespace trilium || true
 
 # Restore Persistent Volume from backup for Trilium
 echo "🔐 Restoring Data Volume..."
-./longhorn-automation.sh restore
+./longhorn-automation.sh restore trilium
 echo "✅ Persistent Data Volume Restored!"
 
 # Deploy Trilium
