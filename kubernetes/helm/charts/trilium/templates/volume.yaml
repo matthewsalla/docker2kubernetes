@@ -1,4 +1,3 @@
-{{- if not (.Values.persistence.restore) }}
 apiVersion: longhorn.io/v1beta2
 kind: Volume
 metadata:
@@ -8,4 +7,6 @@ spec:
   numberOfReplicas: {{ .Values.persistence.numberOfReplicas }}
   frontend: {{ .Values.persistence.frontend | quote }}
   backupTargetName: {{ .Values.persistence.backupTargetName | quote }}
-{{- end }}
+  {{- if .Values.persistence.restore }}
+  fromBackup: {{ .Values.persistence.fromBackup | quote }}
+  {{- end }}

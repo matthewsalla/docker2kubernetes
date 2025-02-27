@@ -35,7 +35,7 @@ BACKUP_ID_FILE="backup_id.txt"
 # The original volume ID that was backed up (this value comes from the volume that was originally backed up)
 ORIGINAL_VOLUME_ID="trilium-pv"
 # The output file for the restore manifest
-RESTORE_OUTPUT="trilium-restored.yaml"
+RESTORE_OUTPUT="../helm/values/trilium-restored-volume.yaml"
 
 if [ "$MODE" == "backup" ]; then
   echo "=== Starting Backup Process for volume '$VOLUME_NAME' ==="
@@ -137,33 +137,12 @@ elif [ "$MODE" == "restore" ]; then
 
   echo "Backup is now ready for restore."
 
-
-  # Step 6: Generate the restore manifest (Volume CR)
   cat > "$RESTORE_OUTPUT" <<EOF
-apiVersion: longhorn.io/v1beta2
-kind: Volume
-metadata:
-  name: trilium-pv
-  namespace: longhorn-system
-spec:
-  numberOfReplicas: 3
-  frontend: blockdev
-  backupTargetName: default
+persistence:
   fromBackup: "s3://longhorn-backups@192.168.14.222:9900/longhorn?backup=${BACKUP_ID}&volume=${ORIGINAL_VOLUME_ID}"
 EOF
 
   echo "Restore manifest generated in '$RESTORE_OUTPUT'"
-  
-  # Step 6: Apply the restore manifest
-  echo "Applying restore manifest..."
-  kubectl apply -f "$RESTORE_OUTPUT"
-  echo "Restore manifest applied."
-
-  kubectl patch volume trilium-pv -n longhorn-system --type=json -p='[
-    {"op": "add", "path": "/metadata/labels/app.kubernetes.io~1managed-by", "value": "Helm"},
-    {"op": "add", "path": "/metadata/annotations/meta.helm.sh~1release-name", "value": "trilium"},
-    {"op": "add", "path": "/metadata/annotations/meta.helm.sh~1release-namespace", "value": "trilium"}
-  ]'
 
   exit 0
 else
