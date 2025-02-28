@@ -1,69 +1,93 @@
-ingress:
-  enabled: false  # Handled via IngressRoute
-
-persistence:
-  enabled: true
-  size: 5Gi
-  storageClassName: longhorn
-
-admin:
-  existingSecret: grafana-admin-credentials
-  userKey: admin-user
-  passwordKey: admin-password
-
-datasources:
-  datasources.yaml:
-    apiVersion: 1
-    datasources:
-      - name: Prometheus
-        type: prometheus
-        url: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
-        access: proxy
-
-# Provision grafana-dashboards-kubernetes
-dashboardProviders:
-  dashboardproviders.yaml:
-    apiVersion: 1
-    providers:
-    - name: 'grafana-dashboards-kubernetes'
-      orgId: 1
-      folder: 'Kubernetes'
-      type: file
-      disableDeletion: true
-      editable: true
-      options:
-        path: /var/lib/grafana/dashboards/grafana-dashboards-kubernetes
-
-dashboards:
-  grafana-dashboards-kubernetes:
-    k8s-system-api-server:
-      url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-system-api-server.json
-      token: ''
-    k8s-system-coredns:
-      url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-system-coredns.json
-      token: ''
-    k8s-views-global:
-      url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-views-global.json
-      token: ''
-    k8s-views-namespaces:
-      url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-views-namespaces.json
-      token: ''
-    k8s-views-nodes:
-      url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-views-nodes.json
-      token: ''
-    k8s-views-pods:
-      url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-views-pods.json
-      token: ''
-
-grafana.ini:
-  log:
-    mode: console
-    filters: "-live"
-    level: info
-  auth.basic:
+grafana:
+  ingressroute:
     enabled: true
-  auth.anonymous:
-    enabled: false
-  security:
-    disable_brute_force_login_protection: false
-    disable_login_form: false
+    host: "grafana.atlasmalt.com"
+    annotations:
+      traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+      traefik.ingress.kubernetes.io/router.tls: "true"
+    tls:
+      secretName: "grafana-tls"
+  certificate:
+    enabled: true
+    name: grafana-tls
+    secretName: grafana-tls
+    issuer:
+      name: "letsencrypt-staging"  # This value can be set via your CI/CD pipeline or .env file
+      kind: ClusterIssuer
+    dnsNames:
+      - grafana.atlasmalt.com
+  persistenceLonghorn:
+    enabled: true
+    restore: false             # Set this to true if you are restoring from backup
+    pvcName: "grafana-pvc"
+    pvName: "grafana-pv"       # Used for the static PV (restored volume)
+    size: "5Gi"
+    accessMode: "ReadWriteOnce"
+    reclaimPolicy: "Retain"
+    storageClassName: "longhorn"
+    csiDriver: "driver.longhorn.io"
+    numberOfReplicas: 3
+    frontend: blockdev
+    backupTargetName: default
+
+  admin:
+    existingSecret: grafana-admin-credentials
+    userKey: admin-user
+    passwordKey: admin-password
+
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          url: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+          access: proxy
+
+  # Provision grafana-dashboards-kubernetes
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+      - name: 'grafana-dashboards-kubernetes'
+        orgId: 1
+        folder: 'Kubernetes'
+        type: file
+        disableDeletion: true
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/grafana-dashboards-kubernetes
+
+  dashboards:
+    grafana-dashboards-kubernetes:
+      k8s-system-api-server:
+        url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-system-api-server.json
+        token: ''
+      k8s-system-coredns:
+        url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-system-coredns.json
+        token: ''
+      k8s-views-global:
+        url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-views-global.json
+        token: ''
+      k8s-views-namespaces:
+        url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-views-namespaces.json
+        token: ''
+      k8s-views-nodes:
+        url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-views-nodes.json
+        token: ''
+      k8s-views-pods:
+        url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-views-pods.json
+        token: ''
+
+  grafana.ini:
+    log:
+      mode: console
+      filters: "-live"
+      level: info
+    auth.basic:
+      enabled: true
+    auth.anonymous:
+      enabled: false
+    security:
+      disable_brute_force_login_protection: false
+      disable_login_form: false

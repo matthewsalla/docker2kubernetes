@@ -1,0 +1,20 @@
+{{- /*
+Convert a size in Gi (e.g. "5Gi") to bytes.
+*/ -}}
+{{- $sizeStr := .Values.grafana.persistenceLonghorn.size | trimSuffix "Gi" -}}
+{{- $sizeGi := $sizeStr | int -}}
+{{- $sizeBytes := mul $sizeGi (mul 1024 (mul 1024 1024)) -}}
+
+apiVersion: longhorn.io/v1beta2
+kind: Volume
+metadata:
+  name: {{ .Values.grafana.persistenceLonghorn.pvName | quote }}
+  namespace: longhorn-system
+spec:
+  numberOfReplicas: {{ .Values.grafana.persistenceLonghorn.numberOfReplicas }}
+  frontend: {{ .Values.grafana.persistenceLonghorn.frontend | quote }}
+  backupTargetName: {{ .Values.grafana.persistenceLonghorn.backupTargetName | quote }}
+  size: "{{ $sizeBytes }}"
+  {{- if .Values.grafana.persistenceLonghorn.restore }}
+  fromBackup: {{ .Values.grafana.persistenceLonghorn.fromBackup | quote }}
+  {{- end }}
