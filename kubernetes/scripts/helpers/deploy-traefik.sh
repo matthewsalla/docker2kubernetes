@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e  # Exit on error
 
+# Determine the script's directory and source config.sh
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/config.sh"
+
 echo "🚀 Deploying Traefik"
 
 helm repo add traefik https://helm.traefik.io/traefik
@@ -8,17 +12,17 @@ helm repo update
 
 helm upgrade --install traefik traefik/traefik \
   --namespace traefik --create-namespace \
-  -f ../helm/values/traefik-values.yaml \
+  --values "$HELM_PATH/values/traefik-values.yaml" \
   --set certIssuer=$CERT_ISSUER
 
 echo "✅ Traefik deployed using $CERT_ISSUER!"
 
 echo "Importing CloudFlare API Key"
-kubectl apply -f ../secrets/traefik-cloudflare-api-credentials-sealed-secret.yaml
+kubectl apply -f "$SECRETS_PATH/traefik-cloudflare-api-credentials-sealed-secret.yaml"
 echo "CloudFlare API Key Imported Successfully!"
 
 echo "Adding Traefik Middleware"
-kubectl apply -f ../apps/traefik/hsts-middleware.yaml
+kubectl apply -f "$MIDDLEWARES_PATH/hsts-middleware.yaml"
 echo "Done deploying Traefik Middleware!"
 
 echo "Restarting Traefik now..."
