@@ -1,6 +1,6 @@
 apiVersion: v2
-name: monitoring
-description: A wrapper chart for monitoring components.
+name: monitoring-grafana
+description: A wrapper chart for Grafana.
 version: 0.1.0
 appVersion: "1.0.0"
 dependencies:
