@@ -25,19 +25,17 @@ bash helpers/deploy-cert-manager.sh
 # Step 4: Deploy Traefik v3
 bash helpers/deploy-traefik.sh
 
-# Step 5: Deploy a test app (Whoami)
-bash helpers/deploy-whoami.sh
-
-# Step 6: Deploy Longhorn
+# Step 5: Deploy Longhorn
 bash helpers/deploy-longhorn.sh
 
-# Step 7: Deploy Monitoring Tools
+# Step 6: Deploy Monitoring Tools
 bash helpers/deploy-monitoring.sh
 
-# Step 8: Deploy Mealie
-bash helpers/deploy-mealie.sh
-
-# Step 9: Deploy TriliumNext
+# Step 7: Deploy TriliumNext
 bash helpers/deploy-trilium.sh
+
+# Step 8: Deploy Mealie
+# bash helpers/deploy-mealie.sh
+
 
 echo "✅ Deployment Completed Successfully!"

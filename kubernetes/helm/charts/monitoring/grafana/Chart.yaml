@@ -1,0 +1,9 @@
+apiVersion: v2
+name: monitoring-grafana
+description: A wrapper chart for Grafana.
+version: 0.1.0
+appVersion: "1.0.0"
+dependencies:
+  - name: grafana
+    version: "8.10.1"   # Use the version you want
+    repository: "https://grafana.github.io/helm-charts"

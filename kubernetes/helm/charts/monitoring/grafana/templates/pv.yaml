@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ .Values.grafana.persistenceLonghorn.pvName | quote }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  capacity:
+    storage: {{ .Values.grafana.persistenceLonghorn.size | quote }}
+  volumeMode: Filesystem
+  accessModes:
+    - {{ .Values.grafana.persistenceLonghorn.accessMode | quote }}
+  persistentVolumeReclaimPolicy: {{ .Values.grafana.persistenceLonghorn.reclaimPolicy | quote }}
+  storageClassName: {{ .Values.grafana.persistenceLonghorn.storageClassName | quote }}
+  csi:
+    driver: {{ .Values.grafana.persistenceLonghorn.csiDriver | quote }}
+    volumeHandle: {{ .Values.grafana.persistenceLonghorn.pvName | quote }}

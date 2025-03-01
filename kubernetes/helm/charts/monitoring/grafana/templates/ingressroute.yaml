@@ -1,0 +1,22 @@
+{{- if .Values.grafana.ingressroute.enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    {{- range $key, $value := .Values.grafana.ingressroute.annotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: "Host(`{{ .Values.grafana.ingressroute.host }}`)"
+      kind: Rule
+      services:
+        - name: {{ .Release.Name }}
+          port: {{ .Values.grafana.service.port }}
+  tls:
+    secretName: {{ .Values.grafana.ingressroute.tls.secretName }}
+{{- end }}

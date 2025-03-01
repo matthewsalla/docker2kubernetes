@@ -4,6 +4,9 @@
 *-restored-volume.yaml
 backup_id_*
 
+# Ignore downloaded helm charts
+*.tgz
+
 # Local .terraform directories
 **/.terraform/*
 

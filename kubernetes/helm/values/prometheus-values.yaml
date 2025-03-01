@@ -1,7 +1,7 @@
+enabled: true
 # Disable Alertmanager for now
 alertmanager:
   enabled: false
-
 # Enable Grafana but keep it out of this deployment
 grafana:
   enabled: false
