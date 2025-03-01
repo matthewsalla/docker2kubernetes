@@ -1,14 +1,26 @@
 #!/bin/bash
 set -euo pipefail
 
-# Usage: ./longhorn-automation.sh {backup|restore} <app_id>
-if [ "$#" -ne 2 ]; then
-  echo "Usage: $0 {backup|restore} <app_id>"
+# Usage: ./longhorn-automation.sh {backup|restore} <app_id> [--wrapper]
+# Example: ./longhorn-automation.sh restore trilium --wrapper
+
+usage() {
+  echo "Usage: $0 {backup|restore} <app_id> [--wrapper]"
   exit 1
+}
+
+if [ "$#" -lt 2 ]; then
+  usage
 fi
 
 MODE="$1"
 APP_ID="$2"
+WRAPPER_MODE=false
+
+# Parse optional args
+if [ "${3:-}" = "--wrapper" ]; then
+  WRAPPER_MODE=true
+fi
 
 # Load sensitive configuration from .env
 if [ -f .env ]; then
@@ -102,15 +114,22 @@ elif [ "$MODE" == "restore" ]; then
   
   # If not a fresh install, verify the backup state
   if [ "$BACKUP_ID" != "dummy-backup-id" ]; then
+
     # Step 5: Wait for backup volume to become available
     for i in {1..30}; do
-      BACKUP_VOLUME_ID=$(curl -s -u "$LONGHORN_USER:$LONGHORN_PASS" "https://${LONGHORN_MANAGER}/v1/backupvolumes" | jq -r --arg vol "$VOLUME_NAME" '.data[] | select(.volumeName==$vol) | .id')
-      if [ -n "$BACKUP_VOLUME_ID" ] && [ "$BACKUP_VOLUME_ID" != "null" ]; then
-        echo "Backup volume found: $BACKUP_VOLUME_ID"
-        break
-      fi
-      echo "Backup volume not yet available, waiting 10 seconds... ($i/30)"
-      sleep 10
+        CURRENT_RESPONSE=$(curl -s -u "$LONGHORN_USER:$LONGHORN_PASS" "https://${LONGHORN_MANAGER}/v1/backupvolumes")
+        
+        # Check if .data exists and is not null
+        if echo "$CURRENT_RESPONSE" | jq -e '.data != null' >/dev/null; then
+            BACKUP_VOLUME_ID=$(echo "$CURRENT_RESPONSE" | jq -r --arg vol "$VOLUME_NAME" '.data[] | select(.volumeName==$vol) | .id')
+            if [ -n "$BACKUP_VOLUME_ID" ] && [ "$BACKUP_VOLUME_ID" != "null" ]; then
+                echo "Backup volume found: $BACKUP_VOLUME_ID"
+                break
+            fi
+        else
+            echo "Backup volumes data not available yet. Waiting... ($i/30)"
+        fi
+        sleep 10
     done
 
     echo "Backup Volume ID: $BACKUP_VOLUME_ID"
@@ -153,10 +172,26 @@ elif [ "$MODE" == "restore" ]; then
   fi
 
   # Step 7: Generate restore manifest
-  cat > "$RESTORE_OUTPUT" <<EOF
-persistence:
+
+  echo "Generating restore manifest in '$RESTORE_OUTPUT'..."
+
+  if [ "$WRAPPER_MODE" = true ]; then
+    # Wrapper scenario: we need:
+    #   appId:
+    #     persistenceLonghorn:
+    #       fromBackup: ...
+    cat <<EOF > "$RESTORE_OUTPUT"
+${APP_ID}:
+  persistenceLonghorn:
+    fromBackup: "s3://longhorn-backups@192.168.14.222:9900/longhorn?backup=${BACKUP_ID}&volume=${ORIGINAL_VOLUME_ID}"
+EOF
+  else
+    # Non-wrapper scenario: no app key, no extra indentation
+    cat <<EOF > "$RESTORE_OUTPUT"
+persistenceLonghorn:
   fromBackup: "s3://longhorn-backups@192.168.14.222:9900/longhorn?backup=${BACKUP_ID}&volume=${ORIGINAL_VOLUME_ID}"
 EOF
+  fi
 
   echo "Restore manifest generated in '$RESTORE_OUTPUT'"
   exit 0

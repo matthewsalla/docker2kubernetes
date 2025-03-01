@@ -10,7 +10,7 @@ echo "📡 Deploying Monitoring Stack..."
 kubectl create namespace monitoring || true
 
 echo "🔐 Restoring Data Volume..."
-./longhorn-automation.sh restore grafana
+./longhorn-automation.sh restore grafana --wrapper
 echo "✅ Persistent Data Volume Restored!"
 
 echo "🔑 Import Grafana Secrets..."
