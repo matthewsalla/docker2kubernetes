@@ -17,7 +17,7 @@ grafana:
     dnsNames:
       - grafana.atlasmalt.com
   persistenceLonghorn:
-    restore: true             # Set this to true if you are restoring from backup
+    restore: false             # Set this to true if you are restoring from backup
     pvcName: "grafana-pvc"
     pvName: "grafana-pv"       # Used for the static PV (restored volume)
     size: "5Gi"
