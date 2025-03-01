@@ -54,7 +54,9 @@ echo "⚠️ WARNING: Would you like to first create a backup of the persistent 
 read -p "Create Backups? (yes/no): " confirm
 if [[ "$confirm" = "yes" ]]; then
     echo "🚀 Backing up volumes on the cluster..."
-    ./longhorn-automation.sh backup
+    ./longhorn-automation.sh backup trilium
+    ./longhorn-automation.sh backup grafana
+    ./longhorn-automation.sh backup prometheus
     echo "🚀 Volumes backed up"
 fi
 

@@ -1,2 +1,4 @@
-persistence:
-  enabled: false  # Disable the default PVC
+grafana:
+  persistence:
+    enabled: true
+    existingClaim: grafana-pvc

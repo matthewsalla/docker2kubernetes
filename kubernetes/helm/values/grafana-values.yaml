@@ -17,7 +17,6 @@ grafana:
     dnsNames:
       - grafana.atlasmalt.com
   persistenceLonghorn:
-    enabled: true
     restore: false             # Set this to true if you are restoring from backup
     pvcName: "grafana-pvc"
     pvName: "grafana-pv"       # Used for the static PV (restored volume)
@@ -41,7 +40,7 @@ grafana:
       datasources:
         - name: Prometheus
           type: prometheus
-          url: http://prometheus-prometheus.monitoring.svc.cluster.local:9090
+          url: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
           access: proxy
 
   # Provision grafana-dashboards-kubernetes
