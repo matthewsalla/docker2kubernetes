@@ -1,9 +1,11 @@
 #!/bin/bash
 set -euo pipefail
 
+########################################
 # Usage: ./longhorn-automation.sh {backup|restore} <app_id> [--wrapper]
-# Example: ./longhorn-automation.sh restore trilium --wrapper
-
+# Example:
+#   ./longhorn-automation.sh restore trilium --wrapper
+########################################
 usage() {
   echo "Usage: $0 {backup|restore} <app_id> [--wrapper]"
   exit 1
@@ -17,12 +19,14 @@ MODE="$1"
 APP_ID="$2"
 WRAPPER_MODE=false
 
-# Parse optional args
+# Optional third argument
 if [ "${3:-}" = "--wrapper" ]; then
   WRAPPER_MODE=true
 fi
 
-# Load sensitive configuration from .env
+########################################
+# Load environment
+########################################
 if [ -f .env ]; then
   source .env
 else
@@ -30,173 +34,224 @@ else
   exit 1
 fi
 
-# Check for required commands
+########################################
+# Verify required commands
+########################################
 for cmd in jq hcl2json; do
   if ! command -v "$cmd" &>/dev/null; then
-    echo "Error: $cmd is not installed. Please install $cmd (e.g., 'brew install $cmd' on macOS)."
+    echo "Error: $cmd is not installed. Please install $cmd."
     exit 1
   fi
 done
+echo "All required commands (jq, hcl2json) are installed."
 
-echo "All required commands (jq and hcl2json) are installed."
-
-# Define app-specific variables:
+########################################
+# Common variables
+########################################
 VOLUME_NAME="${APP_ID}-pv"
 BACKUP_MODE="incremental"
 BACKUP_ID_FILE="backup_id_${APP_ID}.txt"
-ORIGINAL_VOLUME_ID="${VOLUME_NAME}"
+ORIGINAL_VOLUME_ID="$VOLUME_NAME"
 RESTORE_OUTPUT="../helm/values/${APP_ID}-restored-volume.yaml"
+LONGHORN_API="https://${LONGHORN_MANAGER}/v1"
 
-if [ "$MODE" == "backup" ]; then
+########################################
+# Helper: poll_for_completed_backup
+# Polls the .backupStatus[] for (snapshot==snapshot_name && state=="Completed")
+# Prints only the backup ID to stdout if found; logs go to stderr.
+########################################
+poll_for_completed_backup() {
+  local volume_name="$1"
+  local snapshot_name="$2"
+  local max_attempts=30
+  local wait_seconds=10
+
+  for i in $(seq 1 "$max_attempts"); do
+    local vol_json
+    vol_json=$(curl -s -u "$LONGHORN_USER:$LONGHORN_PASS" "$LONGHORN_API/volumes/${volume_name}")
+    local backup_id
+    backup_id=$(echo "$vol_json" | jq -r ".backupStatus[] | select(.snapshot==\"${snapshot_name}\" and .state==\"Completed\") | .id")
+
+    if [ -n "$backup_id" ] && [ "$backup_id" != "null" ]; then
+      echo "$backup_id"  # IMPORTANT: Only echo the ID to stdout
+      return 0
+    fi
+
+    echo "Backup not yet complete for snapshot '${snapshot_name}'. Waiting ${wait_seconds}s... ($i/$max_attempts)" >&2
+    sleep "$wait_seconds"
+  done
+
+  return 1
+}
+
+########################################
+# Helper: wait_for_backup_volume
+# Waits for the "backup volume" to appear in /v1/backupvolumes.
+# Prints only the backup volume ID to stdout; logs to stderr.
+########################################
+wait_for_backup_volume() {
+  local volume_name="$1"
+  local max_attempts=30
+  local wait_seconds=10
+
+  for i in $(seq 1 "$max_attempts"); do
+    local resp
+    resp=$(curl -s -u "$LONGHORN_USER:$LONGHORN_PASS" "$LONGHORN_API/backupvolumes")
+    if echo "$resp" | jq -e '.data != null' &>/dev/null; then
+      local backup_vol_id
+      backup_vol_id=$(echo "$resp" | jq -r --arg vol "$volume_name" '.data[] | select(.volumeName==$vol) | .id')
+      if [ -n "$backup_vol_id" ] && [ "$backup_vol_id" != "null" ]; then
+        echo "$backup_vol_id"  # Only the ID
+        return 0
+      fi
+    fi
+    echo "Backup volumes data not available yet for '${volume_name}'. Waiting ${wait_seconds}s... ($i/$max_attempts)" >&2
+    sleep "$wait_seconds"
+  done
+  return 1
+}
+
+########################################
+# Helper: wait_for_backup_state_completed
+# Uses backupList to ensure a given backupID has .state == "Completed".
+# Prints nothing to stdout; logs to stderr.
+########################################
+wait_for_backup_state_completed() {
+  local backup_vol_id="$1"
+  local backup_id="$2"
+  local max_attempts=30
+  local wait_seconds=10
+
+  for i in $(seq 1 "$max_attempts"); do
+    local backup_list
+    backup_list=$(curl -s -u "$LONGHORN_USER:$LONGHORN_PASS" -X POST \
+      "$LONGHORN_API/backupvolumes/${backup_vol_id}?action=backupList")
+
+    if [[ "$backup_list" == \{* ]]; then
+      local current_state
+      current_state=$(echo "$backup_list" | jq -r --arg bid "$backup_id" '.data[] | select(.id==$bid) | .state')
+      echo "Current backup state for '$backup_id': ${current_state}" >&2
+      if [ "$current_state" = "Completed" ]; then
+        return 0
+      fi
+      echo "Not yet completed. Waiting ${wait_seconds}s... ($i/$max_attempts)" >&2
+    else
+      echo "Non-JSON response while listing backups: $backup_list" >&2
+      echo "Retrying in $wait_seconds seconds... ($i/$max_attempts)" >&2
+    fi
+    sleep "$wait_seconds"
+  done
+  return 1
+}
+
+########################################
+# do_backup
+########################################
+do_backup() {
   echo "=== Starting Backup Process for volume '$VOLUME_NAME' ==="
+  echo "Creating snapshot..."
 
-  # Step 1: Create a snapshot
-  echo "Creating snapshot for volume '$VOLUME_NAME'..."
-  SNAPSHOT_RESPONSE=$(curl -u "$LONGHORN_USER:$LONGHORN_PASS" -X POST -H "Content-Type: application/json" \
+  local snap_resp
+  snap_resp=$(curl -s -u "$LONGHORN_USER:$LONGHORN_PASS" \
+    -X POST -H "Content-Type: application/json" \
     -d '{}' \
-    https://${LONGHORN_MANAGER}/v1/volumes/${VOLUME_NAME}?action=snapshotCreate)
-  echo "Snapshot creation response:"
-  echo "$SNAPSHOT_RESPONSE"
+    "$LONGHORN_API/volumes/${VOLUME_NAME}?action=snapshotCreate")
 
-  # Extract the snapshot name (assumed to be in the "id" field)
-  SNAPSHOT_NAME=$(echo "$SNAPSHOT_RESPONSE" | jq -r '.id')
-  if [ -z "$SNAPSHOT_NAME" ] || [ "$SNAPSHOT_NAME" = "null" ]; then
+  echo "Snapshot creation response:"
+  echo "$snap_resp"
+
+  local snapshot_name
+  snapshot_name=$(echo "$snap_resp" | jq -r '.id')
+  if [ -z "$snapshot_name" ] || [ "$snapshot_name" = "null" ]; then
     echo "Error: Failed to extract snapshot name from response."
     exit 1
   fi
-  echo "Using snapshot name: $SNAPSHOT_NAME"
+  echo "Using snapshot: $snapshot_name"
 
-  # Wait a few seconds for the snapshot to be registered
   sleep 5
 
-  # Step 2: Trigger a backup for that snapshot
-  echo "Triggering backup for snapshot '$SNAPSHOT_NAME' with mode '$BACKUP_MODE'..."
-  BACKUP_RESPONSE=$(curl -u "$LONGHORN_USER:$LONGHORN_PASS" -X POST -H "Content-Type: application/json" \
-    -d "{\"name\":\"${SNAPSHOT_NAME}\",\"backupMode\":\"${BACKUP_MODE}\"}" \
-    https://${LONGHORN_MANAGER}/v1/volumes/${VOLUME_NAME}?action=snapshotBackup)
-  echo "Initial backup response:"
-  echo "$BACKUP_RESPONSE"
+  echo "Triggering backup for '$snapshot_name' (mode: $BACKUP_MODE)..."
+  curl -s -u "$LONGHORN_USER:$LONGHORN_PASS" \
+    -X POST -H "Content-Type: application/json" \
+    -d "{\"name\":\"${snapshot_name}\",\"backupMode\":\"${BACKUP_MODE}\"}" \
+    "$LONGHORN_API/volumes/${VOLUME_NAME}?action=snapshotBackup" >/dev/null || true
 
-  # Step 3: Poll for backup completion and extract the backup ID
   echo "Waiting for backup to complete..."
-  for i in {1..30}; do
-      CURRENT_RESPONSE=$(curl -u "$LONGHORN_USER:$LONGHORN_PASS" https://${LONGHORN_MANAGER}/v1/volumes/${VOLUME_NAME})
-      BACKUP_ID=$(echo "$CURRENT_RESPONSE" | jq -r '.backupStatus[] | select(.snapshot=="'"${SNAPSHOT_NAME}"'" and .state=="Completed") | .id')
-      if [ -n "$BACKUP_ID" ] && [ "$BACKUP_ID" != "null" ]; then
-          echo "Backup completed with ID: $BACKUP_ID"
-          echo "$BACKUP_ID" > "$BACKUP_ID_FILE"
-          echo "Backup ID stored in $BACKUP_ID_FILE"
-          exit 0
-      fi
-      echo "Backup not yet complete. Waiting 10 seconds... ($i/30)"
-      sleep 10
-  done
-
-  echo "Error: Backup did not complete in expected time."
-  exit 1
-
-elif [ "$MODE" == "restore" ]; then
-  echo "=== Starting Restore Process ==="
-  
-  # Step 4: Read the backup ID from file or use a dummy ID for fresh installs
-  if [ ! -f "$BACKUP_ID_FILE" ]; then
-    echo "Notice: Backup ID file '$BACKUP_ID_FILE' does not exist."
-    echo "Assuming fresh install. Using dummy backup ID: dummy-backup-id"
-    BACKUP_ID="dummy-backup-id"
-  elif [ -z "$(cat "$BACKUP_ID_FILE")" ]; then
-    echo "Notice: Backup ID file '$BACKUP_ID_FILE' is empty."
-    echo "Assuming fresh install. Using dummy backup ID: dummy-backup-id"
-    BACKUP_ID="dummy-backup-id"
-  else
-    BACKUP_ID=$(cat "$BACKUP_ID_FILE")
-    echo "Using backup ID: $BACKUP_ID"
+  local completed_backup_id
+  if ! completed_backup_id=$(poll_for_completed_backup "$VOLUME_NAME" "$snapshot_name"); then
+    echo "Error: Backup did not complete in time."
+    exit 1
   fi
-  
-  # If not a fresh install, verify the backup state
-  if [ "$BACKUP_ID" != "dummy-backup-id" ]; then
 
-    # Step 5: Wait for backup volume to become available
-    for i in {1..30}; do
-        CURRENT_RESPONSE=$(curl -s -u "$LONGHORN_USER:$LONGHORN_PASS" "https://${LONGHORN_MANAGER}/v1/backupvolumes")
-        
-        # Check if .data exists and is not null
-        if echo "$CURRENT_RESPONSE" | jq -e '.data != null' >/dev/null; then
-            BACKUP_VOLUME_ID=$(echo "$CURRENT_RESPONSE" | jq -r --arg vol "$VOLUME_NAME" '.data[] | select(.volumeName==$vol) | .id')
-            if [ -n "$BACKUP_VOLUME_ID" ] && [ "$BACKUP_VOLUME_ID" != "null" ]; then
-                echo "Backup volume found: $BACKUP_VOLUME_ID"
-                break
-            fi
-        else
-            echo "Backup volumes data not available yet. Waiting... ($i/30)"
-        fi
-        sleep 10
-    done
+  echo "Backup completed with ID: $completed_backup_id"
+  echo "$completed_backup_id" > "$BACKUP_ID_FILE"
+  echo "Backup ID stored in $BACKUP_ID_FILE"
+}
 
-    echo "Backup Volume ID: $BACKUP_VOLUME_ID"
-    
-    # Step 6: Wait for the backup target to be healthy and backups available
-    echo "Waiting for backup ID '$BACKUP_ID' to reach Completed state..."
-    for i in {1..30}; do
-        CURRENT_RESPONSE=$(curl -s -u "$LONGHORN_USER:$LONGHORN_PASS" -X POST "https://${LONGHORN_MANAGER}/v1/backupvolumes/${BACKUP_VOLUME_ID}?action=backupList")
-        
-        # Check if the response appears to be valid JSON (starts with '{')
-        if [[ "$CURRENT_RESPONSE" != \{* ]]; then
-            echo "Received non-JSON response: $CURRENT_RESPONSE. Retrying... ($i/30)"
-            sleep 10
-            continue
-        fi
+########################################
+# do_restore
+########################################
+do_restore() {
+  echo "=== Starting Restore Process for volume '$VOLUME_NAME' ==="
 
-        echo "Current backupvolumes response:"
-        echo "$CURRENT_RESPONSE"
+  local backup_id="dummy-backup-id"
+  if [ -f "$BACKUP_ID_FILE" ] && [ -s "$BACKUP_ID_FILE" ]; then
+    backup_id=$(<"$BACKUP_ID_FILE")
+    echo "Using backup ID: $backup_id"
+  else
+    echo "Backup ID file '$BACKUP_ID_FILE' not found or empty. Using dummy-backup-id."
+  fi
 
-        # Use jq to extract the state for our backup ID
-        CURRENT_STATE=$(echo "$CURRENT_RESPONSE" | jq -r --arg bid "$BACKUP_ID" '.data[] | select(.id==$bid) | .state')
-        echo "Current backup state: ${CURRENT_STATE}"
-        
-        if [ "$CURRENT_STATE" == "Completed" ]; then
-            echo "Backup $BACKUP_ID is completed."
-            break
-        fi
-        echo "Backup $BACKUP_ID is not yet complete (state: $CURRENT_STATE). Waiting 10 seconds... ($i/30)"
-        sleep 10
-    done
+  if [ "$backup_id" != "dummy-backup-id" ]; then
+    echo "Waiting for backup volume to appear..."
+    local backup_vol_id
+    if ! backup_vol_id=$(wait_for_backup_volume "$VOLUME_NAME"); then
+      echo "Error: Could not find backup volume for $VOLUME_NAME."
+      exit 1
+    fi
+    echo "Backup Volume ID: $backup_vol_id"
 
-    if [ "$CURRENT_STATE" != "Completed" ]; then
-        echo "Error: Backup did not reach 'Completed' state within expected time."
-        exit 1
+    echo "Waiting for backup '$backup_id' to be Completed..."
+    if ! wait_for_backup_state_completed "$backup_vol_id" "$backup_id"; then
+      echo "Error: Backup did not reach 'Completed' state in time."
+      exit 1
     fi
 
     echo "Backup is now ready for restore."
   else
-    echo "Using dummy backup ID. Skipping backup verification steps for fresh install."
+    echo "Dummy backup ID used. Skipping verification steps."
   fi
 
-  # Step 7: Generate restore manifest
-
+  # Generate the restore manifest
   echo "Generating restore manifest in '$RESTORE_OUTPUT'..."
 
   if [ "$WRAPPER_MODE" = true ]; then
-    # Wrapper scenario: we need:
-    #   appId:
-    #     persistenceLonghorn:
-    #       fromBackup: ...
     cat <<EOF > "$RESTORE_OUTPUT"
 ${APP_ID}:
   persistenceLonghorn:
-    fromBackup: "s3://longhorn-backups@192.168.14.222:9900/longhorn?backup=${BACKUP_ID}&volume=${ORIGINAL_VOLUME_ID}"
+    fromBackup: "s3://longhorn-backups@192.168.14.222:9900/longhorn?backup=${backup_id}&volume=${ORIGINAL_VOLUME_ID}"
 EOF
   else
-    # Non-wrapper scenario: no app key, no extra indentation
     cat <<EOF > "$RESTORE_OUTPUT"
 persistenceLonghorn:
-  fromBackup: "s3://longhorn-backups@192.168.14.222:9900/longhorn?backup=${BACKUP_ID}&volume=${ORIGINAL_VOLUME_ID}"
+  fromBackup: "s3://longhorn-backups@192.168.14.222:9900/longhorn?backup=${backup_id}&volume=${ORIGINAL_VOLUME_ID}"
 EOF
   fi
 
   echo "Restore manifest generated in '$RESTORE_OUTPUT'"
-  exit 0
+}
 
-else
-  echo "Invalid mode. Use 'backup' or 'restore'."
-  exit 1
-fi
+########################################
+# Main
+########################################
+case "$MODE" in
+  backup)
+    do_backup
+    ;;
+  restore)
+    do_restore
+    ;;
+  *)
+    usage
+    ;;
+esac
