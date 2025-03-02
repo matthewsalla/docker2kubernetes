@@ -19,23 +19,10 @@ echo "Importing MinIO Credentials"
 kubectl apply -f "$SECRETS_PATH/minio-credentials-sealed-secret.yaml"
 echo "MinIO Credentials Imported Successfully!"
 
-echo "Importing Longhorn middlewares auth"
-kubectl apply -f "$MIDDLEWARES_PATH/longhorn-auth-middleware.yaml"
-echo "Longhorn Middlewares Auth Imported Successfully!"
-
-helm repo add longhorn https://charts.longhorn.io
-helm repo update
-
-helm upgrade --install longhorn longhorn/longhorn \
+helm dependency update "$HELM_PATH/charts/longhorn"
+helm upgrade --install longhorn "$HELM_PATH/charts/longhorn" \
   --namespace longhorn-system \
   --values "$HELM_PATH/values/longhorn-values.yaml"
-
-# Apply the Longhorn TLS Certificate
-echo "🔐 Deploying longhorn Certificate..."
-cat "$CERTS_PATH/longhorn-certificate.yaml" | envsubst | kubectl apply -f -
-
-# Apply Longhorn IngressRoute
-kubectl apply -f "$LONGHORN_APP_PATH/longhorn-ingressroute.yaml"
 
 # Update local-path to not be default storage class
 kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'
