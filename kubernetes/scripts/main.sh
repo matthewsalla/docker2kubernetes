@@ -26,13 +26,13 @@ bash helpers/deploy-cert-manager.sh
 bash helpers/deploy-traefik.sh
 
 # Step 5: Deploy Longhorn
-# bash helpers/deploy-longhorn.sh
+bash helpers/deploy-longhorn.sh
 
 # Step 6: Deploy Monitoring Tools
-# bash helpers/deploy-monitoring.sh
+bash helpers/deploy-monitoring.sh
 
 # Step 7: Deploy TriliumNext
-# bash helpers/deploy-trilium.sh
+bash helpers/deploy-trilium.sh
 
 # Step 8: Deploy Mealie
 # bash helpers/deploy-mealie.sh
