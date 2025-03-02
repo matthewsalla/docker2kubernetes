@@ -1,7 +1,26 @@
-persistence:
-  defaultClass: true
-  defaultFsType: ext4
-  reclaimPolicy: Retain
+longhorn:
+  persistence:
+    defaultClass: true
+    defaultFsType: ext4
+    reclaimPolicy: Retain
 
-ingress:
-  enabled: false
+  ingress:
+    enabled: false
+
+  ingressroute:
+    enabled: true
+    host: "longhorn.atlasmalt.com"
+    annotations:
+      traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+      traefik.ingress.kubernetes.io/router.tls: "true"
+    tls:
+      secretName: "longhorn-tls"
+  certificate:
+    enabled: true
+    name: longhorn-tls
+    secretName: longhorn-tls
+    issuer:
+      name: "letsencrypt-staging"  # This value can be set via your CI/CD pipeline or .env file
+      kind: ClusterIssuer
+    dnsNames:
+      - longhorn.atlasmalt.com

@@ -1,0 +1,16 @@
+apiVersion: v2
+name: longhorn-wrapper
+description: A wrapper chart for Longhorn, allowing custom configuration without modifying the upstream chart.
+version: 0.1.0
+appVersion: "1.8.0"
+
+# Helm v2 is deprecated, so we use apiVersion: v2. 
+# This also means your cluster version must be Helm 3+.
+
+# Mark the upstream chart as a dependency
+dependencies:
+  - name: longhorn
+    version: "1.8.0"          # Same version as the upstream you want to wrap
+    repository: "https://charts.longhorn.io" 
+    # ^ Adjust to the official Longhorn chart repo. 
+    #   The stable repo location may differ depending on how they've published it.
