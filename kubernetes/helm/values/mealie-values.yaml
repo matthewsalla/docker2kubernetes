@@ -33,14 +33,14 @@ service:
       http: 
         port: 9000
 
-persistence:
-  data:
-    enabled: true
-    accessMode: ReadWriteOnce
-    size: 10Gi
-    storageClass: longhorn
-    advancedMounts:
-      main:
-        main:
-          - path: /app/data/
-            readOnly: false
+# persistence:
+#   data:
+#     enabled: true
+#     accessMode: ReadWriteOnce
+#     size: 10Gi
+#     storageClass: longhorn
+#     advancedMounts:
+#       main:
+#         main:
+#           - path: /app/data/
+#             readOnly: false
