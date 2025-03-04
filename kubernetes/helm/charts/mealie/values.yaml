@@ -17,6 +17,19 @@ certificate:
   dnsNames:
     - mealie.atlasmalt.com
 
+persistenceLonghorn:
+  restore: true             # Set this to true if you are restoring from backup
+  pvcName: "mealie-pvc"
+  pvName: "mealie-pv"       # Used for the static PV (restored volume)
+  size: "10Gi"
+  accessMode: "ReadWriteOnce"
+  reclaimPolicy: "Retain"
+  storageClassName: "longhorn"
+  csiDriver: "driver.longhorn.io"
+  numberOfReplicas: 3
+  frontend: blockdev
+  backupTargetName: default
+  fromBackup: "s3://longhorn-backups@192.168.14.222:9900/longhorn?backup=dummy_backup_id&volume=mealie-pv"
 
 #
 # IMPORTANT NOTE
@@ -62,31 +75,21 @@ ingress:
 
 # -- Configure persistence settings for the chart under this key.
 # @default -- See values.yaml
+# persistence:
+#   data:
+#     enabled: true
+#     existingClaim: mealie-pvc
+#     mountPath: /app/data  # TODO: Figure out why this doesn't even get used!
+
 persistence:
   data:
-    enabled: false
-    accessMode: ReadWriteOnce
-    size: 10Gi
+    enabled: true
+    existingClaim: mealie-pvc
     advancedMounts:
       main: # the controller with the "main" identifier
         main: # the container with the "main" identifier
           - path: /app/data/
             readOnly: false
-
-persistenceLonghorn:
-  enabled: true  # Disable the default PVC
-  restore: false             # Set this to true if you are restoring from backup
-  pvcName: "mealie-pvc"
-  pvName: "mealie-pv"       # Used for the static PV (restored volume)
-  size: "10Gi"
-  accessMode: "ReadWriteOnce"
-  reclaimPolicy: "Retain"
-  storageClassName: "longhorn"
-  csiDriver: "driver.longhorn.io"
-  numberOfReplicas: 3
-  frontend: blockdev
-  backupTargetName: default
-  fromBackup: "s3://longhorn-backups@192.168.14.222:9900/longhorn?backup=dummy_backup_id&volume=mealie-pv"
 
 # https://github.com/bitnami/charts/tree/master/bitnami/postgresql/#installing-the-chart
 postgresql:
