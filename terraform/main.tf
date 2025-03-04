@@ -73,7 +73,7 @@ resource "libvirt_cloudinit_disk" "commoninit" {
     cluster_public_key   = tls_private_key.cluster_key.public_key_openssh
     hostname   = each.value.hostname
     node_type    = each.value.cloud_init  # "control-plane" or "worker-node"
-    control_ip   = var.k3s_nodes["control-plane"].ip_address
+    control_ip   = var.k3s_nodes["atlasmalt-control-plane"].ip_address
   })
   network_config = templatefile("${path.module}/config/network_config.cfg", {
     ip_address = each.value.ip_address
