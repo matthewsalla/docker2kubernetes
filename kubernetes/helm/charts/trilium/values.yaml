@@ -33,7 +33,6 @@ persistence:
 
 persistenceLonghorn:
   enabled: false  # Disable the default PVC
-  createPVC: true            # Always create the PVC via the chart
   restore: false             # Set this to true if you are restoring from backup
   pvcName: "trilium-pvc"
   pvName: "trilium-pv"       # Used for the static PV (restored volume)
@@ -45,7 +44,7 @@ persistenceLonghorn:
   numberOfReplicas: 3
   frontend: blockdev
   backupTargetName: default
-  fromBackup: "s3://longhorn-backups@192.168.14.222:9900/longhorn?backup=backup-7a55f9cc125a40c9&volume=trilium-pv"
+  fromBackup: "s3://longhorn-backups@192.168.14.222:9900/longhorn?backup=dummy_backup_id&volume=trilium-pv"
 
 resources:
   limits:
