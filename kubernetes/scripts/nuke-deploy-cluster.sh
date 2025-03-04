@@ -20,7 +20,7 @@ done
 echo "All required commands (jq and hcl2json) are installed."
 TFVARS_FILE="../../terraform/terraform.tfvars"
 TFVARS_JSON=$(hcl2json "$TFVARS_FILE")
-CONTROL_PLANE_IP=$(echo "$TFVARS_JSON" | jq -r '.k3s_nodes["control-plane"].ip_address')
+CONTROL_PLANE_IP=$(echo "$TFVARS_JSON" | jq -r '.k3s_nodes["atlasmalt-control-plane"].ip_address')
 
 if [[ -z "$CONTROL_PLANE_IP" || "$CONTROL_PLANE_IP" == "null" ]]; then
   echo "Error: Control plane IP not found in $TFVARS_FILE."
