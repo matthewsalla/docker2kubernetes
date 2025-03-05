@@ -1,3 +1,6 @@
+persistenceLonghorn:
+  restore: true
+
 strategy:
   type: Recreate
 
@@ -24,23 +27,3 @@ controllers:
           limits:
             cpu: "500m"
             memory: "1Gi"
-
-
-service:
-  main:
-    controller: main
-    ports:
-      http: 
-        port: 9000
-
-persistence:
-  data:
-    enabled: true
-    accessMode: ReadWriteOnce
-    size: 10Gi
-    storageClass: longhorn
-    advancedMounts:
-      main:
-        main:
-          - path: /app/data/
-            readOnly: false

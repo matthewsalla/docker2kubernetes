@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.persistenceLonghorn.pvcName | quote }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  accessModes:
+    - {{ .Values.persistenceLonghorn.accessMode | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.persistenceLonghorn.size | quote }}
+  storageClassName: {{ .Values.persistenceLonghorn.storageClassName | quote }}
+  volumeName: {{ .Values.persistenceLonghorn.pvName | quote }}

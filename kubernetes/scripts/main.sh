@@ -35,7 +35,7 @@ bash helpers/deploy-monitoring.sh
 bash helpers/deploy-trilium.sh
 
 # Step 8: Deploy Mealie
-# bash helpers/deploy-mealie.sh
+bash helpers/deploy-mealie.sh
 
 
 echo "✅ Deployment Completed Successfully!"
