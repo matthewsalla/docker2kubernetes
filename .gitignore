@@ -1,4 +1,5 @@
 .env
+.env.msi
 
 # Ignore dynamically generated manifests used to restore data
 *-restored-volume.yaml
