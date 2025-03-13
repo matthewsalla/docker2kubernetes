@@ -1,0 +1,9 @@
+apiVersion: v2
+name: argocd-wrapper
+description: Wrapper chart around ArgoCD to customize ingress routes
+version: 0.1.0
+
+dependencies:
+  - name: argo-cd
+    version: "6.11.0"  # latest as of this writing; verify version
+    repository: "https://argoproj.github.io/argo-helm"

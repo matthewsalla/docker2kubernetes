@@ -1,0 +1,30 @@
+argo-cd:
+  server:
+    ingress:
+      enabled: false
+  configs:
+    params:
+      server.insecure: true
+
+ingressroute:
+  enabled: true
+  host: "argocd.atlasmalt.com"
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    traefik.ingress.kubernetes.io/router.tls: "true"
+  tls:
+    secretName: "argocd-tls"
+
+service:
+  name: argocd-server
+  port: 80
+
+certificate:
+  enabled: true
+  name: argocd-tls
+  secretName: argocd-tls
+  issuer:
+    name: "letsencrypt-staging"
+    kind: ClusterIssuer
+  dnsNames:
+    - argocd.atlasmalt.com
