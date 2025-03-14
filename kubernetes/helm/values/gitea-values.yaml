@@ -1,0 +1,62 @@
+gitea:
+  persistence:
+    enabled: true      # Make sure persistence is enabled
+    create: false
+    claimName: "gitea-pvc"  # Replace with the name of your existing PVC
+    # size: 8Gi
+  service:
+    http:
+      clusterIP: ""
+  postgresql:
+    enabled: false
+  postgresql-ha:
+    enabled: false
+  redis:
+    enabled: false
+  redis-cluster:
+    enabled: false
+  gitea:
+    additionalConfigFromEnvs:
+      - name: GITEA__SERVER__ROOT_URL
+        value: https://git.atlasmalt.com/
+      - name: GITEA__SERVER__DOMAIN
+        value: git.atlasmalt.com
+      - name: GITEA__SERVER__SSH_DOMAIN
+        value: git.atlasmalt.com
+    config:
+      database:
+        DB_TYPE: sqlite3
+
+ingressroute:
+  enabled: true
+  host: "git.atlasmalt.com"
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    traefik.ingress.kubernetes.io/router.tls: "true"
+  tls:
+    secretName: "gitea-tls"
+
+certificate:
+  enabled: true
+  name: gitea-tls
+  secretName: gitea-tls
+  issuer:
+    name: "letsencrypt-staging"  # This value can be set via your CI/CD pipeline or .env file
+    kind: ClusterIssuer
+  dnsNames:
+    - git.atlasmalt.com
+
+persistenceLonghorn:
+  enabled: true
+  restore: true
+  pvcName: "gitea-pvc"
+  pvName: "gitea-pv"       # Used for the static PV (restored volume)
+  size: "8Gi"
+  accessMode: "ReadWriteOnce"
+  reclaimPolicy: "Retain"
+  storageClassName: "longhorn"
+  csiDriver: "driver.longhorn.io"
+  numberOfReplicas: 3
+  frontend: blockdev
+  backupTargetName: default
+  fromBackup: "s3://longhorn-backups@192.168.14.222:9900/longhorn?backup=dummy_backup_id&volume=gitea-pv"
