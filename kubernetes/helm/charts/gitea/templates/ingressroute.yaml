@@ -1,0 +1,22 @@
+{{- if .Values.ingressroute.enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Name }}
+  annotations:
+    {{- range $key, $value := .Values.ingressroute.annotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: "Host(`{{ .Values.ingressroute.host }}`)"
+      kind: Rule
+      services:
+        - name: {{ .Release.Name }}-http
+          port: {{ .Values.gitea.service.http.port }}
+  tls:
+    secretName: {{ .Values.ingressroute.tls.secretName }}
+{{- end }}
