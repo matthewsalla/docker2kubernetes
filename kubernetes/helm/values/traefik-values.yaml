@@ -2,30 +2,14 @@ additionalArguments:
   - "--entrypoints.websecure.http.middlewares=traefik-hsts@kubernetescrd"
   - "--entryPoints.ssh.address=:222"
 
-entryPoints:
-  web:
-    address: ":80"
-    http:
-      redirections:
-        entryPoint:
-          to: websecure
-          scheme: https
-  websecure:
-    address: ":443"
+ports:
   ssh:
-    address: ":222"
-
-expose:
-  web:
-    expose: true
-  websecure:
-    expose: true
-  ssh:
-    expose: true
-    port: 222
-    exposePort: 3222
+    port: 222             # Container port 222
+    expose:
+      default: true
+    exposePort: 3222      # The external LB or NodePort
     protocol: TCP
-    entryPoint: ssh
+    entryPoint: ssh       # Ties this port to the “ssh” entry point
 
 env:
   - name: CF_API_EMAIL
