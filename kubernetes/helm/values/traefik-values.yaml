@@ -1,6 +1,6 @@
----
 additionalArguments:
-  - "--entrypoints.websecure.http.middlewares=traefik-hsts@kubernetescrd"  # Apply to HTTPS entrypoint
+  - "--entrypoints.websecure.http.middlewares=traefik-hsts@kubernetescrd"
+  - "--entryPoints.ssh.address=:222"
 
 entryPoints:
   web:
@@ -10,9 +10,22 @@ entryPoints:
         entryPoint:
           to: websecure
           scheme: https
-
   websecure:
     address: ":443"
+  ssh:
+    address: ":222"
+
+expose:
+  web:
+    expose: true
+  websecure:
+    expose: true
+  ssh:
+    expose: true
+    port: 222
+    exposePort: 3222
+    protocol: TCP
+    entryPoint: ssh
 
 env:
   - name: CF_API_EMAIL
@@ -30,7 +43,7 @@ ingressRoute:
   dashboard:
     enabled: false
 
-certIssuer: letsencrypt-prod  # Default to production, overridden in script
+certIssuer: letsencrypt-prod
 
 metrics:
   prometheus:
