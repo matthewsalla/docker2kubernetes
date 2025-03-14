@@ -1,5 +1,5 @@
 apiVersion: v2
-appVersion: v1.123.5
+appVersion: v1.123.4
 description: Gitea is git
 name: gitea-wrapper
 version: 2.0.0
