@@ -2,12 +2,13 @@
 set -euo pipefail
 
 ########################################
-# Usage: ./longhorn-automation.sh {backup|restore} <app_id> [--wrapper]
+# Usage: ./longhorn-automation.sh {backup|restore} <app_id> [ORIGINAL_VOLUME_ID] [--wrapper]
 # Example:
-#   ./longhorn-automation.sh restore trilium --wrapper
+#   ./longhorn-automation.sh restore trilium my-volume-id --wrapper
 ########################################
+
 usage() {
-  echo "Usage: $0 {backup|restore} <app_id> [--wrapper]"
+  echo "Usage: $0 {backup|restore} <app_id> [ORIGINAL_VOLUME_ID] [--wrapper]"
   exit 1
 }
 
@@ -17,10 +18,23 @@ fi
 
 MODE="$1"
 APP_ID="$2"
-WRAPPER_MODE=false
+shift 2
 
-# Optional third argument
-if [ "${3:-}" = "--wrapper" ]; then
+VOLUME_NAME="${APP_ID}-pv"
+
+# Check if the next argument is provided and is not the --wrapper flag.
+if [ "$#" -gt 0 ] && [ "$1" != "--wrapper" ]; then
+  ORIGINAL_VOLUME_ID="$1"
+  shift
+fi
+
+# Default ORIGINAL_VOLUME_ID if not provided.
+if [ -z "$ORIGINAL_VOLUME_ID" ]; then
+  ORIGINAL_VOLUME_ID="$VOLUME_NAME"
+fi
+
+WRAPPER_MODE=false
+if [ "$#" -gt 0 ] && [ "$1" == "--wrapper" ]; then
   WRAPPER_MODE=true
 fi
 
@@ -48,10 +62,8 @@ echo "All required commands (jq, hcl2json) are installed."
 ########################################
 # Common variables
 ########################################
-VOLUME_NAME="${APP_ID}-pv"
 BACKUP_MODE="incremental"
 BACKUP_ID_FILE="backup_id_${APP_ID}.txt"
-ORIGINAL_VOLUME_ID="$VOLUME_NAME"
 RESTORE_OUTPUT="../helm/values/${APP_ID}-restored-volume.yaml"
 LONGHORN_API="https://${LONGHORN_MANAGER}/v1"
 
@@ -192,7 +204,7 @@ do_backup() {
 # do_restore
 ########################################
 do_restore() {
-  echo "=== Starting Restore Process for volume '$VOLUME_NAME' ==="
+  echo "=== Starting Restore Process for volume '$ORIGINAL_VOLUME_ID' ==="
 
   local backup_id="dummy-backup-id"
   if [ -f "$BACKUP_ID_FILE" ] && [ -s "$BACKUP_ID_FILE" ]; then
@@ -205,13 +217,14 @@ do_restore() {
   if [ "$backup_id" != "dummy-backup-id" ]; then
     echo "Waiting for backup volume to appear..."
     local backup_vol_id
-    if ! backup_vol_id=$(wait_for_backup_volume "$VOLUME_NAME"); then
-      echo "Error: Could not find backup volume for $VOLUME_NAME."
+    if ! backup_vol_id=$(wait_for_backup_volume "$ORIGINAL_VOLUME_ID"); then
+      echo "Error: Could not find backup volume for $ORIGINAL_VOLUME_ID."
       exit 1
     fi
     echo "Backup Volume ID: $backup_vol_id"
 
     echo "Waiting for backup '$backup_id' to be Completed..."
+
     if ! wait_for_backup_state_completed "$backup_vol_id" "$backup_id"; then
       echo "Error: Backup did not reach 'Completed' state in time."
       exit 1
