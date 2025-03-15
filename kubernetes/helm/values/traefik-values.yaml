@@ -1,18 +1,15 @@
----
 additionalArguments:
-  - "--entrypoints.websecure.http.middlewares=traefik-hsts@kubernetescrd"  # Apply to HTTPS entrypoint
+  - "--entrypoints.websecure.http.middlewares=traefik-hsts@kubernetescrd"
+  - "--entryPoints.ssh.address=:222"
 
-entryPoints:
-  web:
-    address: ":80"
-    http:
-      redirections:
-        entryPoint:
-          to: websecure
-          scheme: https
-
-  websecure:
-    address: ":443"
+ports:
+  ssh:
+    port: 222             # Container port 222
+    expose:
+      default: true
+    exposePort: 3222      # The external LB or NodePort
+    protocol: TCP
+    entryPoint: ssh       # Ties this port to the “ssh” entry point
 
 env:
   - name: CF_API_EMAIL
@@ -30,7 +27,7 @@ ingressRoute:
   dashboard:
     enabled: false
 
-certIssuer: letsencrypt-prod  # Default to production, overridden in script
+certIssuer: letsencrypt-prod
 
 metrics:
   prometheus:
