@@ -1,0 +1,57 @@
+{{- if .Values.persistenceLonghorn.enabled }}
+{{- /*
+Convert a size in Gi (e.g. "5Gi") to bytes.
+*/ -}}
+{{- $sizeStr := .Values.persistenceLonghorn.size | trimSuffix "Gi" -}}
+{{- $sizeGi := $sizeStr | int -}}
+{{- $sizeBytes := mul $sizeGi (mul 1024 (mul 1024 1024)) -}}
+
+apiVersion: longhorn.io/v1beta2
+kind: Volume
+metadata:
+  name: {{ .Values.persistenceLonghorn.pvName | quote }}
+  namespace: longhorn-system
+spec:
+  numberOfReplicas: {{ .Values.persistenceLonghorn.numberOfReplicas }}
+  frontend: {{ .Values.persistenceLonghorn.frontend | quote }}
+  backupTargetName: {{ .Values.persistenceLonghorn.backupTargetName | quote }}
+  size: "{{ $sizeBytes }}"
+  {{- if .Values.persistenceLonghorn.restore }}
+  fromBackup: {{ .Values.persistenceLonghorn.fromBackup | quote }}
+  {{- end }}
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.persistenceLonghorn.pvcName | quote }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  accessModes:
+    - {{ .Values.persistenceLonghorn.accessMode | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.persistenceLonghorn.size | quote }}
+  storageClassName: {{ .Values.persistenceLonghorn.storageClassName | quote }}
+  volumeName: {{ .Values.persistenceLonghorn.pvName | quote }}
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ .Values.persistenceLonghorn.pvName | quote }}
+spec:
+  capacity:
+    storage: {{ .Values.persistenceLonghorn.size | quote }}
+  volumeMode: Filesystem
+  accessModes:
+    - {{ .Values.persistenceLonghorn.accessMode | quote }}
+  persistentVolumeReclaimPolicy: {{ .Values.persistenceLonghorn.reclaimPolicy | quote }}
+  storageClassName: {{ .Values.persistenceLonghorn.storageClassName | quote }}
+  csi:
+    driver: {{ .Values.persistenceLonghorn.csiDriver | quote }}
+    volumeHandle: {{ .Values.persistenceLonghorn.pvName | quote }}
+
+{{- end }}
