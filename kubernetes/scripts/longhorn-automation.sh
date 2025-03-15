@@ -22,6 +22,9 @@ shift 2
 
 VOLUME_NAME="${APP_ID}-pv"
 
+# Initialize ORIGINAL_VOLUME_ID to avoid "unbound variable" error.
+ORIGINAL_VOLUME_ID=""
+
 # Check if the next argument is provided and is not the --wrapper flag.
 if [ "$#" -gt 0 ] && [ "$1" != "--wrapper" ]; then
   ORIGINAL_VOLUME_ID="$1"
@@ -80,7 +83,7 @@ poll_for_completed_backup() {
 
   for i in $(seq 1 "$max_attempts"); do
     local vol_json
-    vol_json=$(curl -s -u "$LONGHORN_USER:$LONGHORN_PASS" "$LONGHORN_API/volumes/${volume_name}")
+    vol_json=$(curl -ks -u "$LONGHORN_USER:$LONGHORN_PASS" "$LONGHORN_API/volumes/${volume_name}")
     local backup_id
     backup_id=$(echo "$vol_json" | jq -r ".backupStatus[] | select(.snapshot==\"${snapshot_name}\" and .state==\"Completed\") | .id")
 
@@ -108,7 +111,7 @@ wait_for_backup_volume() {
 
   for i in $(seq 1 "$max_attempts"); do
     local resp
-    resp=$(curl -s -u "$LONGHORN_USER:$LONGHORN_PASS" "$LONGHORN_API/backupvolumes")
+    resp=$(curl -ks -u "$LONGHORN_USER:$LONGHORN_PASS" "$LONGHORN_API/backupvolumes")
     if echo "$resp" | jq -e '.data != null' &>/dev/null; then
       local backup_vol_id
       backup_vol_id=$(echo "$resp" | jq -r --arg vol "$volume_name" '.data[] | select(.volumeName==$vol) | .id')
@@ -136,7 +139,7 @@ wait_for_backup_state_completed() {
 
   for i in $(seq 1 "$max_attempts"); do
     local backup_list
-    backup_list=$(curl -s -u "$LONGHORN_USER:$LONGHORN_PASS" -X POST \
+    backup_list=$(curl -ks -u "$LONGHORN_USER:$LONGHORN_PASS" -X POST \
       "$LONGHORN_API/backupvolumes/${backup_vol_id}?action=backupList")
 
     if [[ "$backup_list" == \{* ]]; then
@@ -164,7 +167,7 @@ do_backup() {
   echo "Creating snapshot..."
 
   local snap_resp
-  snap_resp=$(curl -s -u "$LONGHORN_USER:$LONGHORN_PASS" \
+  snap_resp=$(curl -ks -u "$LONGHORN_USER:$LONGHORN_PASS" \
     -X POST -H "Content-Type: application/json" \
     -d '{}' \
     "$LONGHORN_API/volumes/${VOLUME_NAME}?action=snapshotCreate")
@@ -183,7 +186,7 @@ do_backup() {
   sleep 5
 
   echo "Triggering backup for '$snapshot_name' (mode: $BACKUP_MODE)..."
-  curl -s -u "$LONGHORN_USER:$LONGHORN_PASS" \
+  curl -ks -u "$LONGHORN_USER:$LONGHORN_PASS" \
     -X POST -H "Content-Type: application/json" \
     -d "{\"name\":\"${snapshot_name}\",\"backupMode\":\"${BACKUP_MODE}\"}" \
     "$LONGHORN_API/volumes/${VOLUME_NAME}?action=snapshotBackup" >/dev/null || true

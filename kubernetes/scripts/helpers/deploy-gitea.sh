@@ -11,7 +11,7 @@ kubectl create namespace gitea || true
 
 # Restore Persistent Volume from backup for Gitea
 echo "🔐 Restoring Data Volume..."
-./longhorn-automation.sh restore gitea pvc-90375b86-e77a-4bfb-9e91-28cbd4983e18
+./longhorn-automation.sh restore gitea
 echo "✅ Persistent Data Volume Restored!"
 
 # Deploy Gitea

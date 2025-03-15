@@ -20,7 +20,7 @@ echo "🎉 Sealed Secrets deployed!"
 # Wait for the Sealed Secret Key to be created
 echo "⏳ Waiting for sealed secret key to be created..."
 SECRETS_KEY=""
-for i in {1..100}; do
+for i in {1..120}; do
   kubectl get secrets -n kube-system > /dev/null 2>&1  # Force refresh
 
   SECRETS_KEY=$(kubectl get secret -n kube-system | grep sealed-secrets-key | awk '{print $1}' || true)
@@ -30,11 +30,11 @@ for i in {1..100}; do
     break
   fi
 
-  echo "🔄 Still waiting for secret... $((100-i)) seconds left"
+  echo "🔄 Still waiting for secret... $((120-i)) seconds left"
   sleep 1
 done
 
 if [[ -z "$SECRETS_KEY" ]]; then
-  echo "❌ ERROR: Sealed secret key not found after 30 seconds!"
+  echo "❌ ERROR: Sealed secret key not found after 120 seconds!"
   exit 1
 fi

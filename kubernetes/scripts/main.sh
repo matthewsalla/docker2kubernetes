@@ -37,5 +37,8 @@ bash helpers/deploy-trilium.sh
 # Step 8: Deploy Mealie
 bash helpers/deploy-mealie.sh
 
+# Step 9: Deploy Gitea
+bash helpers/deploy-gitea.sh
+
 
 echo "✅ Deployment Completed Successfully!"

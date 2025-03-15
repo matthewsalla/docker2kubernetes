@@ -3,6 +3,12 @@ longhorn:
     defaultClass: true
     defaultFsType: ext4
     reclaimPolicy: Retain
+    defaultNodeSelector:
+      enable: true
+      selector: "longhorn-true"
+
+  defaultSettings:
+    createDefaultDiskLabeledNodes: true
 
   ingress:
     enabled: false
