@@ -57,6 +57,7 @@ if [[ "$confirm" = "yes" ]]; then
     ./longhorn-automation.sh backup trilium
     ./longhorn-automation.sh backup grafana
     ./longhorn-automation.sh backup mealie
+    ./longhorn-automation.sh backup gitea
     echo "🚀 Volumes backed up"
 fi
 
