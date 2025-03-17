@@ -30,16 +30,6 @@ gitea:
         DB_TYPE: sqlite3
   actions:
     enabled: true
-    runner:
-      enabled: true
-      persistence:
-        enabled: true
-        create: true
-        claimName: "gitea-actions-pvc"
-        size: 48Gi
-        accessModes:
-          - ReadWriteOnce
-        storageClass: longhorn
     statefulset:
       annotations: {}
       labels:
@@ -49,11 +39,17 @@ gitea:
         tag: "0.2.11"
         pullPolicy: IfNotPresent
         extraVolumeMounts: []
+      extraVolumes:
+        - name: docker-data
+          persistentVolumeClaim:
+            claimName: gitea-actions-docker-pvc
       dind:
         repository: docker
         tag: "25.0.2-dind"
         pullPolicy: IfNotPresent
-        extraVolumeMounts: []
+        extraVolumeMounts:
+          - name: docker-data
+            mountPath: /var/lib/docker
       resources: {}
       nodeSelector:
         dedicated: gitea
@@ -97,3 +93,19 @@ persistenceLonghorn:
   frontend: blockdev
   backupTargetName: default
   fromBackup: "s3://longhorn-backups@192.168.14.222:9900/longhorn?backup=dummy_backup_id&volume=gitea-pv"
+
+gitea-actions-docker:
+  persistenceLonghorn:
+    enabled: true
+    restore: false
+    pvcName: "gitea-actions-docker-pvc"
+    pvName: "gitea-actions-docker-pv"
+    size: "28Gi"
+    accessMode: "ReadWriteOnce"
+    reclaimPolicy: "Retain"
+    storageClassName: "longhorn"
+    csiDriver: "driver.longhorn.io"
+    numberOfReplicas: 3
+    frontend: blockdev
+    backupTargetName: default
+    fromBackup: "s3://longhorn-backups@192.168.14.222:9900/longhorn?backup=dummy_backup_id&volume=gitea-actions-docker-pv"

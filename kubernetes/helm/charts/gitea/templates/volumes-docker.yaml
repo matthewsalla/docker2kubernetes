@@ -1,0 +1,56 @@
+{{- $giteaActions := index .Values "gitea-actions-docker" }}
+{{- if $giteaActions.persistenceLonghorn.enabled }}
+
+{{/* Convert a size in Gi (e.g. "48Gi") to bytes */}}
+{{- $sizeStr := $giteaActions.persistenceLonghorn.size | trimSuffix "Gi" }}
+{{- $sizeGi := $sizeStr | int }}
+{{- $sizeBytes := mul $sizeGi (mul 1024 (mul 1024 1024)) }}
+
+---
+apiVersion: longhorn.io/v1beta2
+kind: Volume
+metadata:
+  name: {{ $giteaActions.persistenceLonghorn.pvName | quote }}
+  namespace: longhorn-system
+spec:
+  numberOfReplicas: {{ $giteaActions.persistenceLonghorn.numberOfReplicas }}
+  frontend: {{ $giteaActions.persistenceLonghorn.frontend | quote }}
+  backupTargetName: {{ $giteaActions.persistenceLonghorn.backupTargetName | quote }}
+  size: "{{ $sizeBytes }}"
+  {{- if $giteaActions.persistenceLonghorn.restore }}
+  fromBackup: {{ $giteaActions.persistenceLonghorn.fromBackup | quote }}
+  {{- end }}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $giteaActions.persistenceLonghorn.pvcName | quote }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  accessModes:
+    - {{ $giteaActions.persistenceLonghorn.accessMode | quote }}
+  resources:
+    requests:
+      storage: {{ $giteaActions.persistenceLonghorn.size | quote }}
+  storageClassName: {{ $giteaActions.persistenceLonghorn.storageClassName | quote }}
+  volumeName: {{ $giteaActions.persistenceLonghorn.pvName | quote }}
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ $giteaActions.persistenceLonghorn.pvName | quote }}
+spec:
+  capacity:
+    storage: {{ $giteaActions.persistenceLonghorn.size | quote }}
+  volumeMode: Filesystem
+  accessModes:
+    - {{ $giteaActions.persistenceLonghorn.accessMode | quote }}
+  persistentVolumeReclaimPolicy: {{ $giteaActions.persistenceLonghorn.reclaimPolicy | quote }}
+  storageClassName: {{ $giteaActions.persistenceLonghorn.storageClassName | quote }}
+  csi:
+    driver: {{ $giteaActions.persistenceLonghorn.csiDriver | quote }}
+    volumeHandle: {{ $giteaActions.persistenceLonghorn.pvName | quote }}
+
+{{- end }}
