@@ -1,4 +1,6 @@
 gitea:
+  nodeSelector:
+    dedicated: gitea
   persistence:
     enabled: true      # Make sure persistence is enabled
     create: false
@@ -26,6 +28,41 @@ gitea:
     config:
       database:
         DB_TYPE: sqlite3
+  actions:
+    enabled: true
+    runner:
+      enabled: true
+      persistence:
+        enabled: true
+        create: true
+        claimName: "gitea-actions-pvc"
+        size: 48Gi
+        accessModes:
+          - ReadWriteOnce
+        storageClass: longhorn
+    statefulset:
+      annotations: {}
+      labels:
+        runner-labels: "ubuntu-latest"
+      actRunner:
+        repository: gitea/act_runner
+        tag: "0.2.11"
+        pullPolicy: IfNotPresent
+        extraVolumeMounts: []
+      dind:
+        repository: docker
+        tag: "25.0.2-dind"
+        pullPolicy: IfNotPresent
+        extraVolumeMounts: []
+      resources: {}
+      nodeSelector:
+        dedicated: gitea
+      tolerations: []
+      affinity: {}
+    provisioning:
+      enabled: false
+    existingSecret: "gitea-actions-token"
+    existingSecretKey: "token"
 
 ingressroute:
   enabled: true
