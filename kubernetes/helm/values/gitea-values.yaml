@@ -1,4 +1,6 @@
 gitea:
+  nodeSelector:
+    dedicated: gitea
   persistence:
     enabled: true      # Make sure persistence is enabled
     create: false
@@ -26,6 +28,37 @@ gitea:
     config:
       database:
         DB_TYPE: sqlite3
+  actions:
+    enabled: true
+    statefulset:
+      annotations: {}
+      labels:
+        runner-labels: "ubuntu-latest"
+      actRunner:
+        repository: gitea/act_runner
+        tag: "0.2.11"
+        pullPolicy: IfNotPresent
+        extraVolumeMounts: []
+      extraVolumes:
+        - name: docker-data
+          persistentVolumeClaim:
+            claimName: gitea-actions-docker-pvc
+      dind:
+        repository: docker
+        tag: "25.0.2-dind"
+        pullPolicy: IfNotPresent
+        extraVolumeMounts:
+          - name: docker-data
+            mountPath: /var/lib/docker
+      resources: {}
+      nodeSelector:
+        dedicated: gitea
+      tolerations: []
+      affinity: {}
+    provisioning:
+      enabled: false
+    existingSecret: "gitea-actions-token"
+    existingSecretKey: "token"
 
 ingressroute:
   enabled: true
@@ -60,3 +93,19 @@ persistenceLonghorn:
   frontend: blockdev
   backupTargetName: default
   fromBackup: "s3://longhorn-backups@192.168.14.222:9900/longhorn?backup=dummy_backup_id&volume=gitea-pv"
+
+gitea-actions-docker:
+  persistenceLonghorn:
+    enabled: true
+    restore: true
+    pvcName: "gitea-actions-docker-pvc"
+    pvName: "gitea-actions-docker-pv"
+    size: "28Gi"
+    accessMode: "ReadWriteOnce"
+    reclaimPolicy: "Retain"
+    storageClassName: "longhorn"
+    csiDriver: "driver.longhorn.io"
+    numberOfReplicas: 3
+    frontend: blockdev
+    backupTargetName: default
+    fromBackup: "s3://longhorn-backups@192.168.14.222:9900/longhorn?backup=dummy_backup_id&volume=gitea-actions-docker-pv"
