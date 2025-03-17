@@ -9,6 +9,10 @@ echo "📡 Deploying Gitea..."
 # Create Namespace
 kubectl create namespace gitea || true
 
+echo "Importing Gitea Actions Token"
+kubectl apply -f "$SECRETS_PATH/gitea-actions-token-sealed-secret.yaml"
+echo "Gitea Actions Token Imported Successfully!"
+
 # Restore Persistent Volume from backup for Gitea
 echo "🔐 Restoring Data Volume..."
 ./longhorn-automation.sh restore gitea
