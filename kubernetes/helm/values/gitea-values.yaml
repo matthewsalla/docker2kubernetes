@@ -97,7 +97,7 @@ persistenceLonghorn:
 gitea-actions-docker:
   persistenceLonghorn:
     enabled: true
-    restore: false
+    restore: true
     pvcName: "gitea-actions-docker-pvc"
     pvName: "gitea-actions-docker-pv"
     size: "28Gi"
