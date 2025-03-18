@@ -9,6 +9,9 @@ echo "📡 Deploying Gitea..."
 # Create Namespace
 kubectl create namespace gitea || true
 
+echo "🏷️  Labeling node for Gitea..."
+kubectl label node atlasmalt-kube-vm-node2 dedicated=gitea --overwrite
+
 echo "Importing Gitea Actions Token"
 kubectl apply -f "$SECRETS_PATH/gitea-actions-token-sealed-secret.yaml"
 echo "Gitea Actions Token Imported Successfully!"
